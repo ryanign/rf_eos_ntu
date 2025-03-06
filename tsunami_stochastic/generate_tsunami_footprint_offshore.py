@@ -32,7 +32,8 @@ def offshore_footprint(args):
     ### find a template SD01.nc
     temp_folder = glob.glob(os.path.join(args.tsunami_gf_path, "gf_*"))[0]
     dtemp = xr.open_dataset(os.path.join(temp_folder, "SD01.nc"))
-    dtemp = dtemp.drop_vars(["step", "max_velocity"])
+    if "step" in dtemp: dtemp = dtemp.drops_vars(["step"])
+    if "max_velocity" in dtemp: dtemp = dtemp.drops_vars(["max_velocity"])
 
     for nn in range(num_samples):
         cols = ['unit_source_index', 'unit_source_filename', f'unit_source_slip__{nn}']
@@ -59,7 +60,9 @@ def offshore_footprint(args):
             if os.path.exists(gf_path):
                 ### here I read only result from highest grid
                 gf_01 = xr.open_dataset(os.path.join(gf_path, "SD01.nc"))
-                gf_01 = gf_01.drop_vars(["step", "max_velocity"])                   #### G(i)
+                if "step" in gf_01: gf_01 = gf_01.drop_vars(["step"])
+                if "max_velocity" in gf_01: gf_01 = gf_01.drop_vars(["max_velocity"])
+                gf_01 = gf_01.fillna(0)
                 gf_01 = gf_01 * slip                                                #### G(i) * m(i)
                 initial_disp += gf_01.initial_displacement
                 max_height += gf_01.max_height
@@ -123,5 +126,8 @@ if __name__ == "__main__":
     parser.add_argument("--where_to_save", type=str,
             default = "/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/jagurs_runs/uji_coba/tsunami_footprints/sample_jawa__2700m_to_0900m")
     args = parser.parse_args()
+
+    main_outdir = Path(args.where_to_save)
+    main_outdir.mkdir(exist_ok = True)
 
     df, dfn, dcp = offshore_footprint(args)

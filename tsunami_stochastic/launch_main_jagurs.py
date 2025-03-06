@@ -17,10 +17,12 @@ def launch(script, disp, jagurs_template, outdir_path, job_name, ncpus=4, ngrids
     return cmd
 
 if __name__ == "__main__":
-    script = "/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/scripts/main_jagurs.py"
+    script = "/home/ignatius.pranantyo/apps/rf_eos_ntu/tsunami_stochastic/main_jagurs.py"
     jagurs_template = "/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/jagurs_runs/uji_coba/template_20250228_jawa_2700m_to_0900m"
     main_displacement_path = "/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/jagurs_runs/uji_coba/unit_sources_gf/unit_sources__grid_2700m"
-    main_outdir_path = Path("/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/jagurs_runs/uji_coba/unit_sources_gf__tsunami/tsunami_gf__2700m")
+    #main_outdir_path = Path("/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/jagurs_runs/uji_coba/unit_sources_gf__tsunami/tsunami_gf__2700m")
+
+    main_outdir_path = Path("/scratch/ignatius.pranantyo/tsunami_gf__2700m")
     main_outdir_path.mkdir(exist_ok = True)
 
     ### main ###
@@ -42,6 +44,6 @@ if __name__ == "__main__":
     unit_src_df["job_name"] = job_names
 
     #ii = 0
-    for ii in range(100, len(unit_src_df)):
+    for ii in range(100 , len(unit_src_df)):
         cmd = launch(script, unit_src_df["disp_file"][ii], jagurs_template, unit_src_df["outdir_path"][ii], unit_src_df["job_name"][ii], 4, 2)
     

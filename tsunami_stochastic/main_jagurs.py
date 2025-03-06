@@ -25,9 +25,13 @@ def write_pbs(args):
     pbs.write(f"export LD_LIBRARY_PATH='LD_LIBRARY_PATH':/home/ignatius.pranantyo/apps/mylibs/proj-4.9.3/lib:/home/ignatius.pranantyo/apps/mylibs/netcdf-fortran-4.5.3/lib\n")
     pbs.write(f"time ./jagurs_serial_ncdio par=tsun.par\n")
     ### to compress output files
+    pbs.write(f"source /home/ignatius.pranantyo/.bashrc\n")
+    pbs.write(f"~/apps/miniconda3/bin/activate\n")
+    pbs.write(f"conda activate tsunamis_py39\n")
     for nn in range(args.num_of_grids):
         pbs.write(f"nccopy -d2 SD{nn:02d}.nc SD{nn:02d}_tmp.nc\n")
         pbs.write(f"mv SD{nn:02d}_tmp.nc SD{nn:02d}.nc\n")
+        pbs.write(f"python utils_compress_jagurs_nc.py --jagurs_nc SD{nn:02d}.nc\n")
     pbs.close()
 
 def launch(args):
