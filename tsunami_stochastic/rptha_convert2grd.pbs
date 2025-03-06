@@ -1,0 +1,14 @@
+#PBS -N rptha_convert
+#PBS -P eos_luca.dalzilio
+#PBS -q qamd_wfly
+#PBS -l walltime=48:00:00
+#PBS -l select=1:ncpus=8
+
+cd $PBS_O_WORKDIR
+
+source /home/ignatius.pranantyo/.bashrc
+
+~/apps/miniconda3/bin/activate 
+conda activate tsunamis_py39
+
+time python -W ignore launch_convert_unitsources_tif2grd.py

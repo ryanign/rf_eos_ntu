@@ -1,0 +1,19 @@
+#PBS -N rptha
+#PBS -P eos_luca.dalzilio
+#PBS -q qintel_wfly
+#PBS -l walltime=48:00:00
+#PBS -l select=1:ncpus=8
+
+module load gnu/gcc-12.3
+
+cd $PBS_O_WORKDIR
+
+source /home/ignatius.pranantyo/.bashrc
+
+~/apps/miniconda3/bin/activate 
+conda activate rptha_py312
+
+R CMD INSTALL rptha_0.1.146.tar.gz
+module load gnu/gcc-12.3
+Rscript produce_unit_sources.R 1
+
