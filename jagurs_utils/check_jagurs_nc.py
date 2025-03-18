@@ -52,7 +52,7 @@ def initial_displacement(infile, vmin, vmax):
     ax = fig.add_subplot(1,1,1, projection=ccrs.PlateCarree())
     ax.set_title(f"Initial displacement {fname} [m]", pad=0.01)
     ax.coastlines()
-    disp = ax.imshow(nc.data[0], vmin=vmin, vmax=vmax,
+    disp = ax.imshow(nc.data[0] / args.scale_ratio, vmin=vmin, vmax=vmax,
             extent=[xmin, xmax, ymin, ymax], cmap="RdBu_r",
             origin="lower")
     fig.colorbar(disp, orientation="vertical", 
@@ -81,7 +81,8 @@ def tsunami_max_footprint(infile):
     fig = plt.figure(figsize = (fwidth, fheight), constrained_layout = True)
     ax = fig.add_subplot(1,1,1, projection=ccrs.PlateCarree())
     ax.set_title(f"Max tsunami elevation {fname} [m]", pad=0.01)
-    disp = ax.imshow(nc.data, vmin=0, vmax=np.nanmax(nc.data)/3,
+    ax.coastlines(zorder=100)
+    disp = ax.imshow(nc.data / args.scale_ratio, vmin=0, vmax=np.nanmax(nc.data)/3,
             extent=[xmin, xmax, ymin, ymax], cmap="hot_r",
             origin="lower")
     fig.colorbar(disp, orientation="vertical",
@@ -113,9 +114,11 @@ def tsunami_footprint_timeseries(infile, vmin, vmax, t0, t1):
         fig = plt.figure(figsize = (fwidth, fheight), constrained_layout = True)
         ax = fig.add_subplot(1,1,1, projection=ccrs.PlateCarree())
         ax.set_title(f"{string} {fname} [m]", pad=0.01)
-        disp = ax.imshow(nc.data[ii], vmin=vmin, vmax=vmax,
-            extent=[xmin, xmax, ymin, ymax], cmap="RdBu_r",
-            origin="lower")
+        ax.coastlines(zorder=100)
+        disp = ax.imshow(nc.data[ii] / args.scale_ratio, 
+                vmin=vmin, vmax=vmax,
+                extent=[xmin, xmax, ymin, ymax], cmap="RdBu_r",
+                origin="lower")
         fig.colorbar(disp, orientation="vertical",
             extend="both", pad=0, shrink=0.8)
         ax.set_xlim(xmin, xmax)
@@ -147,6 +150,9 @@ if __name__ == "__main__":
     parser.add_argument("--t0_t1", type=int, nargs="+",
             default = [20, 30],
             help = "range of time step to plot footprint timeseries, required when what_to_check is 3")
+    parser.add_argument("--scale_ratio", type=float,
+            default = 10000.,
+            help = "In order to save some space, JAGURS outputs is saved in an integer format, multiplied it by 10,000. In this case, --scale_ratio will be 10000")
     args = parser.parse_args()
 
     if os.path.exists(args.jagurs_nc):
