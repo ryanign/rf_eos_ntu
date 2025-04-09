@@ -37,7 +37,7 @@ def fig_size(dlon, dlat, fwidth = 10.):
         fheight = (fwidth / ratio) + 0.035
     return fwidth, fheight
 
-def initial_displacement(infile, vmin, vmax):
+def initial_displacement(infile, vmin, vmax, scale_ratio):
     print(infile, vmin, vmax)
     nc = xr.open_dataset(infile)
     nc = nc["initial_displacement"]
@@ -52,7 +52,7 @@ def initial_displacement(infile, vmin, vmax):
     ax = fig.add_subplot(1,1,1, projection=ccrs.PlateCarree())
     ax.set_title(f"Initial displacement {fname} [m]", pad=0.01)
     ax.coastlines()
-    disp = ax.imshow(nc.data[0] / args.scale_ratio, vmin=vmin, vmax=vmax,
+    disp = ax.imshow(nc.data[0] / scale_ratio, vmin=vmin, vmax=vmax,
             extent=[xmin, xmax, ymin, ymax], cmap="RdBu_r",
             origin="lower")
     fig.colorbar(disp, orientation="vertical", 
@@ -66,10 +66,11 @@ def initial_displacement(infile, vmin, vmax):
 
     return nc
 
-def tsunami_max_footprint(infile):
+def tsunami_max_footprint(infile, scale_ratio):
     print(infile)
     nc = xr.open_dataset(infile)
     nc = nc["max_height"]
+    nc = nc.where(nc.data != 0 , np.nan)
 
     fname = infile.name[:-3]
     parent_dir = infile.parent
@@ -81,22 +82,26 @@ def tsunami_max_footprint(infile):
     fig = plt.figure(figsize = (fwidth, fheight), constrained_layout = True)
     ax = fig.add_subplot(1,1,1, projection=ccrs.PlateCarree())
     ax.set_title(f"Max tsunami elevation {fname} [m]", pad=0.01)
-    ax.coastlines(zorder=100)
-    disp = ax.imshow(nc.data / args.scale_ratio, vmin=0, vmax=np.nanmax(nc.data)/3,
+    #ax.coastlines(zorder=100)
+    disp = ax.imshow(nc.data / scale_ratio, vmin=0, vmax=np.nanmax(nc.data / scale_ratio)/3,
             extent=[xmin, xmax, ymin, ymax], cmap="hot_r",
             origin="lower")
     fig.colorbar(disp, orientation="vertical",
             extend="max", pad=0, shrink=0.8)
     ax.set_xlim(xmin, xmax)
     ax.set_ylim(ymin, ymax)
+    ax.set_facecolor("gray")
 
+    #print(scale_ratio)
+    #print(nc.data/scale_ratio)
+    
     fout = os.path.join(fig_dir, f"max_footprint__{fname}.png")
     fig.savefig(fout, dpi=300)
     plt.close()
 
     return nc
 
-def tsunami_footprint_timeseries(infile, vmin, vmax, t0, t1):
+def tsunami_footprint_timeseries(infile, vmin, vmax, t0, t1, scale_ratio):
     print(infile, vmin, vmax, t0, t1)
     nc = xr.open_dataset(infile)
     nc = nc["wave_height"]
@@ -115,7 +120,7 @@ def tsunami_footprint_timeseries(infile, vmin, vmax, t0, t1):
         ax = fig.add_subplot(1,1,1, projection=ccrs.PlateCarree())
         ax.set_title(f"{string} {fname} [m]", pad=0.01)
         ax.coastlines(zorder=100)
-        disp = ax.imshow(nc.data[ii] / args.scale_ratio, 
+        disp = ax.imshow(nc.data[ii] / scale_ratio, 
                 vmin=vmin, vmax=vmax,
                 extent=[xmin, xmax, ymin, ymax], cmap="RdBu_r",
                 origin="lower")
@@ -161,12 +166,12 @@ if __name__ == "__main__":
         fig_dir = Path(os.path.join(parent_dir, "figures"))
         fig_dir.mkdir(exist_ok = True)
         if args.what_to_check == 1:
-            nc = initial_displacement(infile, args.vmin_vmax[0], args.vmin_vmax[1])
+            nc = initial_displacement(infile, args.vmin_vmax[0], args.vmin_vmax[1], args.scale_ratio)
         elif args.what_to_check == 2:
-            nc = tsunami_max_footprint(infile)
+            nc = tsunami_max_footprint(infile, args.scale_ratio)
         elif args.what_to_check == 3:
             nc = tsunami_footprint_timeseries(infile, args.vmin_vmax[0], args.vmin_vmax[1], 
-                    args.t0_t1[0], args.t0_t1[1])
+                    args.t0_t1[0], args.t0_t1[1], args.scale_ratio)
         else:
             print("WRONG what_to_check CODE!")
             sys.exit()

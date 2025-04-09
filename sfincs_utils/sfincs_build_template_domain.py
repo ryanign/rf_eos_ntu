@@ -31,7 +31,7 @@ parser.add_argument("--domain_area", type = str,
         default = "/home/ignatius.pranantyo/Tsunamis/Learnings/SFINCS_examples/input_exercise/domain_pangandaran.gpkg",
         help = "domain polygon in .gpkg format")
 parser.add_argument("--model_resolution", type = int,
-        default = 100,
+        default = 30,
         help = "model resolution to be generated, in m")
 parser.add_argument("--dem_file", type = str,
         default = "/home/ignatius.pranantyo/Tsunamis/Learnings/SFINCS_examples/input_exercise/dem_pangandaran_small.tif",
@@ -48,13 +48,20 @@ parser.add_argument("--manning_sea", type = float,
 parser.add_argument("--open_bc_line", type = str,
         default =  "/home/ignatius.pranantyo/Tsunamis/Learnings/SFINCS_examples/input_exercise/open_bc_line__pangandaran.gpkg",
         help = "line where open BC water level is")
-parser.add_argument("--time", type = int, default = 24,
+parser.add_argument("--walltime", type = int, default = 24,
         help = "wall time requested, in hour and int")
 parser.add_argument("--ncpus", type = int, default = 4,
         help = "number of cpus requested")
 parser.add_argument("--sfincs_exe", type = str,
-        default = "",
+        default = "/home/ignatius.pranantyo/apps/sfincs/executable/bin/sfincs",
         help = "path to sfincs exe file, will be used to create a symbolic link to template domain")
+parser.add_argument("--project_code", type=str, 
+        default = "eos_luca.dalzilio",
+        help = "Project code name on WildFly")
+parser.add_argument("--qtype", type=str, 
+        default = "qintel_wfly",
+        help = "queue type in Wildfly: qintel_wfly, qamd_wfly, dev")
+
 args = parser.parse_args()
 ### 
 
@@ -129,9 +136,22 @@ fig,ax = sf.plot_basemap(fn_out = fig_name, bmap = "sat", zoomlevel = 6)
 sf.write()
 
 # write sfincs.slurm script
-# ADD THIS LATER!
+f = open(os.path.join(root_dir, "sfincs.slurm"), "w")
+f.write(f"#!/bin/bash\n")
+f.write(f"#PBS -N SFINCS\n")
+f.write(f"#PBS -P {args.project_code}\n")
+f.write(f"#PBS -q {args.qtype}\n")
+f.write(f"#PBS -l walltime={args.walltime:02d}:00:00\n")
+f.write(f"#PBS -l select=1:ncpus={args.ncpus}\n")
+f.write(f"module load gnu/gcc-12.3\n")
+f.write(f"module load hdf5/1.14.3-intel2023-parallel\n")
+f.write(f"cd $PBS_O_WORKDIR\n")
+f.write(f"time ./sfincs\n")
+f.close()
 
 # create a symlink from sfincs.exe
+cmd = f"ln -s {args.sfincs_exe} {root_dir}/sfincs"
+os.system(cmd)
 # ADD THIS LATER!
 
 print(f"")
