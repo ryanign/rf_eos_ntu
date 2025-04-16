@@ -91,7 +91,7 @@ def extract(args):
         data = nc.max_height
 
     ### extract data
-    res = Parallel(n_jobs = 8)(delayed(extract_data)\
+    res = Parallel(n_jobs = args.ncpus)(delayed(extract_data)\
             (data, station_df["LAT"][ii], station_df["LON"][ii]) for ii in station_df.index)
     extracted = np.vstack(res).T   ### column is virtual point name
     bc_df = pd.DataFrame(data = extracted, columns = station_df["NAME"])
@@ -168,6 +168,8 @@ if __name__ == "__main__":
             help = "1: extract elevation timeseries, 2: extract maximum elevation")
     parser.add_argument("--plot_extracted", type=bool, default = False,
             help = "True or False, plotting the extracted data, for now only for the timeseries")
+    parser.add_argument("--ncpus", type=int, default = 8,
+            help = "Num of cpus to use to extract elevation timeseries")
     args = parser.parse_args()
 
     nc, station_df = extract(args)
