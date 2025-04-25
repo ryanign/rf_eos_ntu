@@ -21,6 +21,7 @@ def main(topo_file, mask_land_shp, land_correction,
     to clip and correct topography inland
     to clip bathymetry on the sea followoing topography extent
     """
+    print(topo_file)
     topo_file = Path(topo_file)
     bathy_file = Path(bathy_file)
 
@@ -89,23 +90,27 @@ def main(topo_file, mask_land_shp, land_correction,
     return dem_topo, mask_land, dem_topo_c, dem_bathy, dem_bathy_c
 
 if __name__ == "__main__":
-    topo_files = ['/home/ryan/OneDrive_NTU_Projects/DATA/DeltaDTM/DeltaDTM_v1_1_S08E108.tif',
-                  '/home/ryan/OneDrive_NTU_Projects/DATA/DeltaDTM/DeltaDTM_v1_1_S08E109.tif']
-    topo_file = '/home/ryan/OneDrive_NTU_Projects/DATA/DeltaDTM/DeltaDTM_v1_1_S08E108.tif'
-    mask_land_shp = '/home/ryan/OneDrive_NTU_Projects/DATA/DEM_corrections/sedang_dikerjakan/vectors/polygon_garispantai_rbi__buffered-100m.shp'
+    topo_tiles = pd.read_csv('DeltaDTM_tiles2correct.csv')
+    topo_path = '/scratch/ignatius.pranantyo/DATA/DeltaDTM'
+    bathy_file = '/scratch/ignatius.pranantyo/DATA/TanahAirIndonesia/BATNAS_v1-5-0.tif'
+    
+    #mask_land_shp = '/home/ignatius.pranantyo/DATA/working_deltadtm/vectors/polygon_garispantai_rbi__buffered-100m.shp'
+    #mask_sea_shp = '/home/ignatius.pranantyo/DATA/working_deltadtm/vectors/mask_sea_jawabalilombok__buffered1000m.shp'
 
-    shift_by = -0.5   ### correction value
 
-    bathy_file = '/home/ryan/OneDrive_NTU_Projects/DATA/BATNAS/BATNAS_v1-5-0.tif'
-    mask_sea_shp = '/home/ryan/OneDrive_NTU_Projects/DATA/DEM_corrections/sedang_dikerjakan/vectors/mask_sea_jawabalilombok__buffered1000m.shp'
+    mask_land_shp = '/home/ignatius.pranantyo/DATA/working_deltadtm/vectors/mask_land_sumatra-jawa-bali-lombok-sumbawa.shp'
+    mask_sea_shp = '/home/ignatius.pranantyo/DATA/working_deltadtm/vectors/mask_sea_sumatra-jawa-bali-lombok-sumbawa.shp'
 
-    where_to_save = Path('/home/ryan/OneDrive_NTU_Projects/DATA/DEM_corrections/sedang_dikerjakan/raster_deltadem_correction/')
+    shift_by = -0.0   ### correction value in metre
 
-    Parallel(n_jobs = 2)(delayed(main)(topo_files[ii], mask_land_shp, shift_by, bathy_file, mask_sea_shp, where_to_save) for ii in range(len(topo_files)))
-    #dem_topo, mask_land, dem_topo_c, dem_bathy, dem_bathy_c = main(topo_file, mask_land_shp, shift_by,
-    #                            bathy_file, mask_sea_shp, where_to_save)
+    where_to_save = Path(f'/home/ignatius.pranantyo/DATA/working_deltadtm/points__batnas_deltadem_correction_by{shift_by}m/')
+    where_to_save.mkdir(exist_ok = True)
 
-    ### checking temp outputs
-    #dem_topo_c.rio.to_raster('/home/ryan/OneDrive_NTU_Projects/DATA/DEM_corrections/sedang_dikerjakan/raster_deltadem_correction/clip-and-shift__DeltaDTM_v1_1_S08E108.tif', driver='GTiff', compress='LZW')
+    Parallel(n_jobs = 8)(delayed(main)(os.path.join(topo_path, topo_tiles['tile'][ii]), mask_land_shp, shift_by, bathy_file, mask_sea_shp, where_to_save) for ii in range(len(topo_tiles)))
 
-    #dem_bathy_c.rio.to_raster('/home/ryan/OneDrive_NTU_Projects/DATA/DEM_corrections/sedang_dikerjakan/raster_deltadem_correction/clip-and-shift__BATNAS_v1-5_S08E108.tif', driver='GTiff', compress='LZW')
+
+
+
+
+
+    sys.exit()
