@@ -112,7 +112,7 @@ sf.setup_config(**
          "advection" : f"{args.advection}",
          "alpha" : f"{args.alpha}",
          "theta" : f"{args.theta}",
-         "huthresh" : f"{args.huthresh}")
+         "huthresh" : f"{args.huthresh}"})
                 
 
 # add water level bc to sfincs config

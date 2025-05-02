@@ -88,6 +88,11 @@ fout = os.path.join(fig_dir, "flood_depth_maximum.png")
 fig.savefig(fout, dpi=200)
 plt.close()
 
+### export to GTiff
+sf.write_raster("results.hmax", compress="LZW")
+
+
+
 def plot_snapshots(t, da_h, dem):
     print(t)
     fig = plt.figure(figsize = (width, height), constrained_layout = True)
