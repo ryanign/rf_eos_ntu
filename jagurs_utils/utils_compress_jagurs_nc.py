@@ -46,6 +46,20 @@ nc = nc.drop_vars(["step", "max_velocity"])
 
 var2compress = ["initial_displacement", "max_height", "wave_height"]
 for var in var2compress:
+    nc[var] = nc[var] * scale
+
+encoding = {'wave_height'          : {'dtype' : 'int16', '_FillValue' : 0, 'zlib' : True, 'complevel' : 5},
+            'max_height'           : {'dtype' : 'int16', '_FillValue' : 0, 'zlib' : True, 'complevel' : 5},
+            'initial_displacement' : {'dtype' : 'int16', '_FillValue' : 0, 'zlib' : True, 'complevel' : 5}}
+nc.to_netcdf(f"{args.jagurs_nc[:-3]_tmp.nc")
+nc.close()
+os.system(f"mv {args.jagurs_nc[:-3]}_tmp.nc {args.jagurs_nc}")
+
+
+
+
+sys.exit()
+for var in var2compress:
     nc[var].data = (nc[var].data * scale).astype(dtype)
     nc[var].attrs.update(description = 
             f"Scale ratio = {args.scale_ratio} and in {dtype} format, converted by Ryan Pranantyo")
