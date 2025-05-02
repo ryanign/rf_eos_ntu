@@ -50,7 +50,7 @@ parser.add_argument("--open_bc_line", type = str,
         help = "line where open BC water level is")
 parser.add_argument("--walltime", type = int, default = 24,
         help = "wall time requested, in hour and int")
-parser.add_argument("--ncpus", type = int, default = 4,
+parser.add_argument("--ncpus", type = int, default = 8,
         help = "number of cpus requested")
 parser.add_argument("--sfincs_exe", type = str,
         default = "/home/ignatius.pranantyo/apps/sfincs/executable/bin/sfincs",
@@ -59,7 +59,7 @@ parser.add_argument("--project_code", type=str,
         default = "eos_luca.dalzilio",
         help = "Project code name on WildFly")
 parser.add_argument("--qtype", type=str, 
-        default = "qintel_wfly",
+        default = "qamd_wfly",
         help = "queue type in Wildfly: qintel_wfly, qamd_wfly, dev")
 
 args = parser.parse_args()
@@ -125,7 +125,8 @@ bc_waterlevel = sf.data_catalog.get_geodataframe(open_bc_line)
 ### if masking area is unavailable
 #sf.setup_mask_bounds(btype="waterlevel", zmax = mask_zmin + 1, reset_bounds = True)
 ### if masking area is available
-sf.setup_mask_bounds(btype="waterlevel", zmax = -5, reset_bounds = True)
+#sf.setup_mask_bounds(btype="waterlevel", zmax = -5, reset_bounds = True)
+sf.setup_mask_bounds(btype="waterlevel", zmax = -2, reset_bounds = True)
 
 # read open BC points
 # seems add this when add water level forcing

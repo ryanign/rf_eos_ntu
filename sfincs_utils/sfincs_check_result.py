@@ -46,7 +46,7 @@ utm = utm_zone[:-1]
 hemisphere = utm_zone[-1]
 
 # mask water depth
-hmin = 0.01
+hmin = 0.05
 da_h = sf.results["h"].copy()
 da_h = da_h.where(da_h > hmin).drop("spatial_ref")
 da_h.attrs.update(long_name = "flood_depth", unit = "m")
@@ -82,8 +82,8 @@ ax.contour(X, Y, dem, levels = [0], colors = "black",
 flood_depth = np.where(dem <=0, np.nan, da_h[0].values)
 var = ax.imshow(flood_depth, origin = "lower",
         extent = [da_h.x.min(), da_h.x.max(), da_h.y.min(), da_h.y.max()],
-        vmin = 0, vmax = 0.5)
-fig.colorbar(var, orientation = "vertical", shrink = 0.5, pad=0)
+        vmin = 0, vmax = 10.)
+fig.colorbar(var, orientation = "vertical", shrink = 0.5, pad=0, extend='max')
 fout = os.path.join(fig_dir, "flood_depth_maximum.png")
 fig.savefig(fout, dpi=200)
 plt.close()
@@ -116,6 +116,10 @@ def plot_snapshots(t, da_h, dem):
     fout = os.path.join(fig_dir, f"flood_depth__{t:05d}.png")
     fig.savefig(fout, dpi=300)
     plt.close(fig)
+
+
+if args.steps == 0:
+    sys.exit()
 
 ### plot snapshots
 da_h = sf.results["h"].copy()

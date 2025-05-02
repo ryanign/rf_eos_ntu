@@ -43,13 +43,23 @@ parser.add_argument("--bc_points_csv", type = str,
 parser.add_argument("--cfl", type = float,
         default = 0.5,
         help = "CFL criteria for SFINCS")
+parser.add_argument("--huthresh", type = float,
+        default = 0.05,
+        help = "minimum threshold to be considered as a wet cell, unit in m")
 parser.add_argument("--advection", type = int,
         default = 2,
         help = "advection flag in SFINCS, 0 = NO, 1 = 1d, 2 = 2d")
-parser.add_argument("--scale_ratio", type = int,
+parser.add_argument("--alpha", type = float,
+        default = 0.1,
+        help = "alpha coef., related to stability function in SFINCS")
+parser.add_argument("--theta", type = float,
+        default = 0.8,
+        help = "theta coef., related to smoothing factor in SFINCS")
+parser.add_argument("--scale_ratio", type = float,
         default = 10000,
         help = "scale ratio to 'normalise' the timeseries value due to the conversion from JAGURS simulation to save some space. Please Use the same scale ratio")
 # all done #
+
 args = parser.parse_args()
 sfincs_template = Path(args.sfincs_template)
 sfincs_target = args.target_dir
@@ -99,7 +109,10 @@ sf.setup_config(**{"tref" : time_start.strftime("%Y%m%d %H%M%S"),
 # setup other parameters inside sfincs.inp
 sf.setup_config(**
         {"dtout" : "60",
-         "advection" : f"{args.advection}"} )
+         "advection" : f"{args.advection}",
+         "alpha" : f"{args.alpha}",
+         "theta" : f"{args.theta}",
+         "huthresh" : f"{args.huthresh}")
                 
 
 # add water level bc to sfincs config
