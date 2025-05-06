@@ -1,0 +1,25 @@
+Scenario calculated at 2025-05-06 06:38:31 GMT
+Project name: subduction_test
+Run name: subduction
+Run number: 000031
+Velocity model: cascadia.mod
+No. of KL modes: 500
+Hurst exponent: 0.4
+Corr. length used Lstrike: 52.38 km
+Corr. length used Ldip: 20.40 km
+Slip std. dev.: 0.900 km
+Maximum length Lmax: 120.01 km
+Maximum width Wmax: 40.00 km
+Effective length Leff: 102.01 km
+Effective width Weff: 34.00 km
+Target magnitude: Mw 7.8000
+Actual magnitude: Mw 7.9591
+Hypocenter (lon,lat,z[km]): (4.173413,1.824299,25.18)
+Hypocenter time: 2016-09-07T14:42:26.000000Z
+Centroid (lon,lat,z[km]): (4.196511,2.313611,25.86)
+Source time function type: dreger
+Average Risetime (s): 6.292629503e+00
+Average Rupture Velocity (km/s): 2.994511716e+00
+Avg. length: 122.95 km
+Avg. width: 47.51 km
+Class: 0 type
