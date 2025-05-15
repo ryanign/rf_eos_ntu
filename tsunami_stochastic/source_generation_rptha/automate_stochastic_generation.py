@@ -163,8 +163,10 @@ def main(args):
                                         'x'          : 'unit_source_filename'})
     unit_df.to_csv(unit_f, index=False)
 
-    ### combine unit_df and df_stoch (stochastic slip model into one DF ###
-    Parallel(n_jobs = args.ncpus)(delayed(combine_unit_source_and_sffm)(ii, df_comb, unit_df, args) for ii in df_comb.index)
+    
+    if args.combine_sffm_and_unit_source == True:
+        ### combine unit_df and df_stoch (stochastic slip model into one DF ###
+        Parallel(n_jobs = args.ncpus)(delayed(combine_unit_source_and_sffm)(ii, df_comb, unit_df, args) for ii in df_comb.index)
 
     ### cleaning up working folder
     print(f"cleaning up working folder ...")
@@ -209,6 +211,8 @@ if __name__ == "__main__":
             help = "delete Rscripts thaat used to generate SFFM at the end of the script")
     parser.add_argument("--clean_raw_sffm_tables", type=bool, default=True,
             help = "delete ram SFFM tables at the end of the script")
+    parser.add_argument("--combine_sffm_and_unit_source", type=bool, default=False,
+            help = "combine unit_source filename and SFFM table to make it simple")
     args = parser.parse_args()
 
     main(args)

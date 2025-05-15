@@ -96,7 +96,7 @@ def tsunami_max_footprint(infile, scale_ratio, dem, XX, YY):
     ax.set_facecolor("gray")
 
     if dem is not None and XX is not None and YY is not None:
-        ax.contour(XX, YY, dem[::-1], [0], colors='white', zorder=100, linewidths=2)
+        ax.contour(XX, YY, dem[::-1], [0], colors='black', zorder=100, linewidths=2)
 
     #print(scale_ratio)
     #print(nc.data/scale_ratio)

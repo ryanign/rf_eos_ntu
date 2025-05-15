@@ -3,7 +3,7 @@ Ryan Pranantyo
 EOS, March 2025
 
 a small script to compress jagurs output file:
-    > convert data to float16
+    > convert data to int32
     > remove not needed variables
 """
 import os, sys
@@ -13,7 +13,7 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("--jagurs_nc", type=str, default="SD00.nc",
         help = "JAGURS nc output file")
-parser.add_argument("--scale_ratio", type=int, default=1000,
+parser.add_argument("--scale_ratio", type=int, default=10000,
         help = "output values will be multipled by this scale and save it as int")
 args = parser.parse_args()
 
