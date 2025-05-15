@@ -165,6 +165,7 @@ def main(args):
 
     
     if args.combine_sffm_and_unit_source == True:
+        """ WE CAN REMOVE THIS LATER """
         ### combine unit_df and df_stoch (stochastic slip model into one DF ###
         Parallel(n_jobs = args.ncpus)(delayed(combine_unit_source_and_sffm)(ii, df_comb, unit_df, args) for ii in df_comb.index)
 
