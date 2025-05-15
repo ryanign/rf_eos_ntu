@@ -118,10 +118,16 @@ def combine_unit_source_and_sffm(ii, df_comb, unit_df, args):
     return df
 
 def main(args):
-    Mw_min = args.Mw_bins[0]
-    Mw_max = args.Mw_bins[1]
-    Mw_bin = args.Mw_bins[2]
-    Mw_series = np.arange(Mw_min , Mw_max + Mw_bin, Mw_bin)
+    if args.Mw_bins is None:
+        Mw_series = [args.Mw_target]
+    else:
+        Mw_min = args.Mw_bins[0]
+        Mw_max = args.Mw_bins[1]
+        Mw_bin = args.Mw_bins[2]
+        Mw_series = np.arange(Mw_min , Mw_max + Mw_bin, Mw_bin)
+    
+    print(f"Going to generate Mw = {Mw_series}")
+
     Nsamples = args.NumSamples
     centroids = pd.read_csv(args.epicentre_list)
     scaling = args.scaling_relationship
@@ -145,7 +151,7 @@ def main(args):
     ### launch combine_source_script.R
     #ii = 0
     #df_stoch = launch_combine_source_script(args, df_comb, Nsamples, scaling, where_to_save, ii)
-    ncpus = 1
+    ncpus = args.ncpus
     Parallel(n_jobs = args.ncpus)(delayed(launch_combine_source_script)(
         args, df_comb, Nsamples, scaling, where_to_save, ii) for ii in df_comb.index)
 
@@ -157,8 +163,10 @@ def main(args):
                                         'x'          : 'unit_source_filename'})
     unit_df.to_csv(unit_f, index=False)
 
-    ### combine unit_df and df_stoch (stochastic slip model into one DF ###
-    Parallel(n_jobs = args.ncpus)(delayed(combine_unit_source_and_sffm)(ii, df_comb, unit_df, args) for ii in df_comb.index)
+    
+    if args.combine_sffm_and_unit_source == True:
+        ### combine unit_df and df_stoch (stochastic slip model into one DF ###
+        Parallel(n_jobs = args.ncpus)(delayed(combine_unit_source_and_sffm)(ii, df_comb, unit_df, args) for ii in df_comb.index)
 
     ### cleaning up working folder
     print(f"cleaning up working folder ...")
@@ -177,8 +185,10 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--Mw_bins", type=float, nargs="+", default=[7.0, 9.0, 0.1],
-            help = "[Mw_min, Mw_max, bin]")
+    parser.add_argument("--Mw_bins", type=float, nargs="+", default=None, #[7.0, 9.0, 0.1],
+            help = "[Mw_min, Mw_max, bin], if want to generate a series of Mw")
+    parser.add_argument("--Mw_target", type=float, default=7.3,
+            help = "target Mw to be generated")
     parser.add_argument("--NumSamples", type=int, default=100,
             help = "Number of random samples on every epicentre")
     parser.add_argument("--epicentre_list", type=str, default="/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/input_files/centroids__sumatera_jawa__slab2__20kmX20km.csv",
@@ -201,6 +211,8 @@ if __name__ == "__main__":
             help = "delete Rscripts thaat used to generate SFFM at the end of the script")
     parser.add_argument("--clean_raw_sffm_tables", type=bool, default=True,
             help = "delete ram SFFM tables at the end of the script")
+    parser.add_argument("--combine_sffm_and_unit_source", type=bool, default=False,
+            help = "combine unit_source filename and SFFM table to make it simple")
     args = parser.parse_args()
 
     main(args)
