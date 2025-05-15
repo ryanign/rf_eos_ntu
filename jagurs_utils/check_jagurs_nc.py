@@ -37,7 +37,7 @@ def fig_size(dlon, dlat, fwidth = 10.):
         fheight = (fwidth / ratio) + 0.035
     return fwidth, fheight
 
-def initial_displacement(infile, vmin, vmax, scale_ratio):
+def initial_displacement(infile, vmin, vmax, scale_ratio, dem, XX, YY):
     print(infile, vmin, vmax)
     nc = xr.open_dataset(infile)
     nc = nc["initial_displacement"]
@@ -60,13 +60,16 @@ def initial_displacement(infile, vmin, vmax, scale_ratio):
     ax.set_xlim(xmin, xmax)
     ax.set_ylim(ymin, ymax)
 
+    if dem is not None and XX is not None and YY is not None:
+        ax.contour(XX, YY, dem[::-1], [0], colors='white', zorder=100, linewidths=2)
+
     fout = os.path.join(fig_dir, f"init_disp__{fname}.png")
     fig.savefig(fout, dpi=300)
     plt.close()
 
     return nc
 
-def tsunami_max_footprint(infile, scale_ratio):
+def tsunami_max_footprint(infile, scale_ratio, dem, XX, YY):
     print(infile)
     nc = xr.open_dataset(infile)
     nc = nc["max_height"]
@@ -83,7 +86,7 @@ def tsunami_max_footprint(infile, scale_ratio):
     ax = fig.add_subplot(1,1,1, projection=ccrs.PlateCarree())
     ax.set_title(f"Max tsunami elevation {fname} [m]", pad=0.01)
     #ax.coastlines(zorder=100)
-    disp = ax.imshow(nc.data / scale_ratio, vmin=0, vmax=np.nanmax(nc.data / scale_ratio)/3,
+    disp = ax.imshow(nc.data / scale_ratio, vmin=0, vmax=np.nanmax(nc.data / scale_ratio),
             extent=[xmin, xmax, ymin, ymax], cmap="hot_r",
             origin="lower")
     fig.colorbar(disp, orientation="vertical",
@@ -91,6 +94,9 @@ def tsunami_max_footprint(infile, scale_ratio):
     ax.set_xlim(xmin, xmax)
     ax.set_ylim(ymin, ymax)
     ax.set_facecolor("gray")
+
+    if dem is not None and XX is not None and YY is not None:
+        ax.contour(XX, YY, dem[::-1], [0], colors='white', zorder=100, linewidths=2)
 
     #print(scale_ratio)
     #print(nc.data/scale_ratio)
@@ -101,7 +107,7 @@ def tsunami_max_footprint(infile, scale_ratio):
 
     return nc
 
-def tsunami_footprint_timeseries(infile, vmin, vmax, t0, t1, scale_ratio):
+def tsunami_footprint_timeseries(infile, vmin, vmax, t0, t1, scale_ratio, dem, XX, YY):
     print(infile, vmin, vmax, t0, t1)
     nc = xr.open_dataset(infile)
     nc = nc["wave_height"]
@@ -128,6 +134,10 @@ def tsunami_footprint_timeseries(infile, vmin, vmax, t0, t1, scale_ratio):
             extend="both", pad=0, shrink=0.8)
         ax.set_xlim(xmin, xmax)
         ax.set_ylim(ymin, ymax)
+
+        if dem is not None and XX is not None and YY is not None:   
+            ax.contour(XX, YY, dem[::-1], [0], colors='white', zorder=100, linewidths=2)
+
         fout = os.path.join(fig_dir, f"footprint_{ii:04d}__{fname}.png")
         fig.savefig(fout)
         plt.close(fig)
@@ -140,6 +150,20 @@ def tsunami_footprint_timeseries(infile, vmin, vmax, t0, t1, scale_ratio):
     os.system(cmd)
 
     return nc
+
+def load_dem(dem_f):
+    ds = xr.open_dataset(dem_f)
+    res_x, res_y = ds.spacing.values
+    nx, ny = ds.dimension.values
+    xmin, xmax = ds.x_range.values.ravel()
+    ymin, ymax = ds.y_range.values.ravel()
+    x_range = np.linspace(xmin, xmax, nx)
+    y_range = np.linspace(ymin, ymax, ny)
+    z_values = ds.z.values
+    XX , YY = np.meshgrid(x_range, y_range)
+    dem = z_values.reshape(XX.shape)
+    return dem, XX, YY
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -158,7 +182,15 @@ if __name__ == "__main__":
     parser.add_argument("--scale_ratio", type=float,
             default = 10000.,
             help = "In order to save some space, JAGURS outputs is saved in an integer format, multiplied it by 10,000. In this case, --scale_ratio will be 10000")
+    parser.add_argument("--dem_file", type=str,
+            default = None,
+            help = "to generate coastline for plotting")
     args = parser.parse_args()
+
+    if args.dem_file is not None:
+        dem, XX, YY = load_dem(args.dem_file)
+    else:
+        dem, XX, YY = None, None, None
 
     if os.path.exists(args.jagurs_nc):
         infile = Path(args.jagurs_nc)
@@ -166,12 +198,12 @@ if __name__ == "__main__":
         fig_dir = Path(os.path.join(parent_dir, "figures"))
         fig_dir.mkdir(exist_ok = True)
         if args.what_to_check == 1:
-            nc = initial_displacement(infile, args.vmin_vmax[0], args.vmin_vmax[1], args.scale_ratio)
+            nc = initial_displacement(infile, args.vmin_vmax[0], args.vmin_vmax[1], args.scale_ratio, dem, XX, YY)
         elif args.what_to_check == 2:
-            nc = tsunami_max_footprint(infile, args.scale_ratio)
+            nc = tsunami_max_footprint(infile, args.scale_ratio, dem, XX, YY)
         elif args.what_to_check == 3:
             nc = tsunami_footprint_timeseries(infile, args.vmin_vmax[0], args.vmin_vmax[1], 
-                    args.t0_t1[0], args.t0_t1[1], args.scale_ratio)
+                    args.t0_t1[0], args.t0_t1[1], args.scale_ratio, dem, XX, YY)
         else:
             print("WRONG what_to_check CODE!")
             sys.exit()
