@@ -7,15 +7,27 @@ a quick script to extract sfincs results
 import os, sys
 import pandas as pd
 from joblib import Parallel, delayed
+from pathlib import Path
+import argparse
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--correction_by", type=str,
+        default="-0.0")
+parser.add_argument("--resolution_m", type=int,
+        default=90)
+args = parser.parse_args()
 
-events_catalogue = '../EventsCatalogue__Jawa__TESTING__20250502.csv'
+events_catalogue = '/home/ignatius.pranantyo/Tsunamis/AOGS2025__StressCaseScenarios/EventsCatalogue__Sample__AOGS2025__20250513.csv'
 events_df = pd.read_csv(events_catalogue)
 
 sfincs_script = '/home/ignatius.pranantyo/apps/rf_eos_ntu/sfincs_utils/sfincs_check_result.py'
 
-sfincs_target__path = '/home/ignatius.pranantyo/Tsunamis/AOGS2025__StressCaseScenarios/SFINCS_onshore_simulations/SIMULATIONS'
-resolution2extract = 90
+#sfincs_target__path = '/home/ignatius.pranantyo/Tsunamis/AOGS2025__StressCaseScenarios/SFINCS_onshore_simulations/SIMULATIONS__AOGS2025/'
+correction = args.correction_by
+resolution2extract = args.resolution_m
+
+sfincs_target__path = Path(f'/home/ignatius.pranantyo/Tsunamis/AOGS2025__StressCaseScenarios/SFINCS_onshore_simulations/SIMULATIONS__AOGS2025/DeltaDTM__corrected_by_{correction}m__resolution_{resolution2extract}m')
+
 
 ### start to launch simulations
 def extract(script, sfincs_model):
@@ -37,6 +49,6 @@ for ii in events_df.index:
     for tile in tiles2run:
         sfincs_models.append(os.path.join(sfincs_target__path, scenario, f'{tile}__{scenario}__resolution__{resolution2extract}_m'))
 
-    Parallel(n_jobs = 2)(delayed(extract)(sfincs_script, sfincs_model) for sfincs_model in sfincs_models)
+    Parallel(n_jobs = 3)(delayed(extract)(sfincs_script, sfincs_model) for sfincs_model in sfincs_models)
 
 

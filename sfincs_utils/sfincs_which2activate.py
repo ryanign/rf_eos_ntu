@@ -16,13 +16,18 @@ import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 from pathlib import Path
 from shapely.geometry import Point
+from joblib import Parallel, delayed
 
-def mapping_max_values(script, jagurs_nc, bc_open_f, scenario, where_to_save, tiles, threshold=1.0, plot=True):
+def mapping_max_values(script, jagurs_nc, bc_open_f, scenario, where_to_save, tiles, threshold=1.0, scale_ratio=10000, plot=True):
     """
     main target of this function is to filter which tiles to be simulated for sfincs simulation
     1. extract jagurs_nc max elevation at bc_open_f
     2. remove points if max elevation below threshold (df_max)
     3. find the point (df_max) inside sfincs domain (tiles/df_tile)
+
+    scale_ratio = JAGURS output file is saved in int32 format by multiplying the values by this scale ratio,
+        by default, I use 10000. 
+    Hence, the threshold to define which tiles to be activated will be multiplied by this scale_ratio.
 
     df_tile['tile_name'] = list of tiles to be simulated for coastal inundation, in this case using sfincs.
     """
@@ -43,7 +48,7 @@ def mapping_max_values(script, jagurs_nc, bc_open_f, scenario, where_to_save, ti
     df = df.merge(bc_df)
 
     ### filterout max values under threshold
-    df_max = df[df['max_value'] >= threshold]
+    df_max = df[df['max_value'] >= threshold * scale_ratio]
 
     df_tile = tiles
     ### check which tile to run
@@ -70,9 +75,11 @@ def mapping_max_values(script, jagurs_nc, bc_open_f, scenario, where_to_save, ti
         ax = fig.add_subplot(1,1,1, projection=ccrs.PlateCarree())
         ax.coastlines()
         ax.scatter(df.LON, df.LAT, marker='o', fc='none', ec='gray')
-        cb = ax.scatter(df_max.LON, df_max.LAT, marker='o', c=df_max['max_value'], ec='none', vmin=threshold)
+        cb = ax.scatter(df_max.LON, df_max.LAT, marker='o', c=df_max['max_value'] / scale_ratio, 
+                ec='none', vmin=threshold)
         df_tile.boundary.plot(ax=ax, linewidth=0.2)
-        fig.colorbar(cb, pad=0, orientation='vertical', shrink=0.5, extend='max')
+        fig.colorbar(cb, pad=0, orientation='vertical', shrink=0.5, extend='max', 
+                label='max values at SFINCS openbc, m')
         fout = os.path.join(where_output_is, 'max_values.png')
         fig.savefig(fout)
     return df, df_max, df_tile
@@ -129,6 +136,51 @@ def prepare_openbc_pertile(script, jagurs_nc, bc_open_f, scenario, where_to_save
 
     return cmd, bc_file
 
+def check_individual_event(
+        ii, 
+        events_df, 
+        jagurs_simulations_path,
+        script2extract,
+        points_openbc_line,
+        main_where_to_save,
+        sfincs_tiles,
+        jagurs_nc_out='SD01.nc',
+        threshold=1.0,
+        scale_ratio=10000):
+    """ 
+    main part 
+    """
+    
+    event_name = events_df['EVENT_NAME'][ii]
+    event_id = events_df['EVENT_ID'][ii]
+    scenario = f'{event_id:08d}__{event_name}'
+    print(event_name, event_id)
+
+    jagurs_nc = Path(os.path.join(jagurs_simulations_path, scenario, jagurs_nc_out))
+
+    ### extract sfincs tiles to simulate
+    df, df_max, df_tile = mapping_max_values(script2extract, jagurs_nc, points_openbc_line, scenario, main_where_to_save, sfincs_tiles, threshold, scale_ratio, plot=True)
+    
+    ### to update events_df by adding path where the openbc timeseries would be saved
+    openbc_timeseries_path = os.path.join(main_where_to_save, scenario)
+    tiles2run = os.path.join(main_where_to_save, scenario, f'tiles2run__{scenario}.csv')
+
+    ### prepare open bc timeseries per-tile
+    for jj in df_tile.index:
+        tile_name = df_tile['tile_name'][jj]
+        bc_open_tile_f = Path(os.path.join(points_openbc_line.parent, f"{points_openbc_line.name[:-4]}__{tile_name}.csv"))
+
+        cmd, sfincs_open_bc_f = prepare_openbc_pertile(
+                script2extract, 
+                jagurs_nc, 
+                bc_open_tile_f, 
+                scenario, 
+                main_where_to_save, 
+                tile_name
+                )
+
+    return openbc_timeseries_path, tiles2run
+
 
 if __name__ == "__main__":
 
@@ -146,12 +198,17 @@ if __name__ == "__main__":
     main_where_to_save.mkdir(exist_ok = True)
 
     # SFINCS domain tiles in a polygon, as a base to determine which tiles to be simulated by SFINCS
-    domain_tiles = "/home/ignatius.pranantyo/Tsunamis/AOGS2025__StressCaseScenarios/SFINCS_config/vectors/domain_tiles.shp"
+    ##domain_tiles = "/home/ignatius.pranantyo/Tsunamis/AOGS2025__StressCaseScenarios/SFINCS_config/vectors/domain_tiles.shp"
+    #JUST FOR AOGS
+    domain_tiles = "/home/ignatius.pranantyo/Tsunamis/AOGS2025__StressCaseScenarios/SFINCS_config/vectors/domain_tiles__AOGS2025.shp"
+    # JAGURS output file to use
+    jagurs_nc_out = 'SD01.nc'
+    # multiplication factor coef used to convert JAGURS output from float to int32
+    scale_ratio = 10000
 
     # offshore minimum elevation to be considered for SFINCS simulation
-    threshold = 1
+    threshold = 0.05 # in metre
 
-    
     sfincs_tiles, bc_df = check_points_inside_tile(points_openbc_line, domain_tiles)
 
     #sys.exit()
@@ -161,52 +218,52 @@ if __name__ == "__main__":
     section below is the way to launch timeseries extrcation and determine which tiles to be activated for SFINCS simulations
     """
     ### section below follow scenario to check! ###
-    MODEL_CONFIGURATION_NAME = "TESTING__20250502"
-    events_catalogue = Path('../EventsCatalogue__Jawa.csv')
+    #MODEL_CONFIGURATION_NAME = "TESTING__20250502"
+    #events_catalogue = Path('../EventsCatalogue__Jawa.csv')
+
+    MODEL_CONFIGURATION_NAME = "20250513"
+    events_catalogue = Path('/home/ignatius.pranantyo/Tsunamis/AOGS2025__StressCaseScenarios/EventsCatalogue__Sample__AOGS2025.csv')
+
+
     events_df = pd.read_csv(events_catalogue)
     events_df['openbc_timeseries_path'] = None
     events_df['tiles2run'] = None
     jagurs_simulations_path = '/home/ignatius.pranantyo/Tsunamis/AOGS2025__StressCaseScenarios/JAGURS_offshore_simulations/'
-    for ii in events_df.index: #[:1]:
-        event_name = events_df['EVENT_NAME'][ii]
-        event_id = events_df['EVENT_ID'][ii]
-        scenario = f'{event_id:08d}__{event_name}'
-        print(event_name, event_id)
-        
-        jagurs_nc = Path(os.path.join(jagurs_simulations_path, scenario, 'SD01.nc'))
+    
+    #ii = 0
+    results = Parallel(n_jobs = 6)(
+            delayed(check_individual_event)(
+                ii,
+                events_df,
+                jagurs_simulations_path,
+                script2extract,
+                points_openbc_line,
+                main_where_to_save,
+                sfincs_tiles,
+                jagurs_nc_out,
+                threshold,
+                scale_ratio) 
+            for ii in events_df.index)
+    
+    open_bc_timeseries_path, tiles2run = zip(*results)
+    
+    events_df['openbc_timeseries_path'] = open_bc_timeseries_path
+    events_df['tiles2run'] = tiles2run
 
-        ### extract sfincs tiles to simulate
-        df, df_max, df_tile = mapping_max_values(script2extract, jagurs_nc, points_openbc_line, scenario, main_where_to_save, sfincs_tiles, threshold, plot=True)
-
-        ### update events_df DataFrame by adding path where the openbc timeseries would be saved
-        events_df.loc[ii, 'openbc_timeseries_path'] = os.path.join(main_where_to_save, scenario)
-        events_df.loc[ii, 'tiles2run'] = os.path.join(main_where_to_save, scenario, f'tiles2run__{scenario}.csv')
-
-        ### prepare open bc timeseries per-tile
-        for jj in df_tile.index:
-            tile_name = df_tile['tile_name'][jj]
-            bc_open_tile_f = Path(os.path.join(points_openbc_line.parent, f"{points_openbc_line.name[:-4]}__{tile_name}.csv"))
-
-            cmd, sfincs_open_bc_f = prepare_openbc_pertile(
-                    script2extract, 
-                    jagurs_nc, 
-                    bc_open_tile_f, 
-                    scenario, 
-                    main_where_to_save, 
-                    tile_name
-                    )
-        
-    ### re-save events_catalogue dataframe 
+    ### re-save events_catalogue dataframe
     fout = os.path.join(events_catalogue.parent, events_catalogue.name[:-4] + '__' + MODEL_CONFIGURATION_NAME + '.csv')
     events_df.to_csv(fout, index = False)
 
-
-
+    print(events_df)
+    
     sys.exit()
+    """
+    DONE
+    DONE
+    DONE
+    DONE
+    """
 
 
-    scenario = "AOGS__WestJava_SupendiEtAl__testing"
-    jagurs_nc = Path("/home/ignatius.pranantyo/Tsunamis/AOGS2025__StressCaseScenarios/JAGURS_offshore_simulations/AOGS2025__WestJava_SupendiEtAl__testing/SD01.nc")
-    df, df_max, df_tile = mapping_max_values(script2extract, jagurs_nc, points_openbc_line, scenario, main_where_to_save, df_tile, threshold, plot=True)
 
 

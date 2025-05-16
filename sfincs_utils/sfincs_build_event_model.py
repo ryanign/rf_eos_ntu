@@ -58,6 +58,9 @@ parser.add_argument("--theta", type = float,
 parser.add_argument("--scale_ratio", type = float,
         default = 10000,
         help = "scale ratio to 'normalise' the timeseries value due to the conversion from JAGURS simulation to save some space. Please Use the same scale ratio")
+parser.add_argument("--dtout", type = int,
+        default = 600,
+        help = "spatial map output interval, in seconds")
 # all done #
 
 args = parser.parse_args()
@@ -108,7 +111,7 @@ sf.setup_config(**{"tref" : time_start.strftime("%Y%m%d %H%M%S"),
 
 # setup other parameters inside sfincs.inp
 sf.setup_config(**
-        {"dtout" : "60",
+        {"dtout" : f"{args.dtout}",
          "advection" : f"{args.advection}",
          "alpha" : f"{args.alpha}",
          "theta" : f"{args.theta}",

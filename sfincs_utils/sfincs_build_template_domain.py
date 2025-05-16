@@ -59,8 +59,11 @@ parser.add_argument("--project_code", type=str,
         default = "eos_luca.dalzilio",
         help = "Project code name on WildFly")
 parser.add_argument("--qtype", type=str, 
-        default = "qamd_wfly",
+        default = "qintel_wfly",
         help = "queue type in Wildfly: qintel_wfly, qamd_wfly, dev")
+parser.add_argument("--memory", type=int,
+        default = 32,
+        help = "RAM requested for simulation")
 
 args = parser.parse_args()
 ### 
@@ -143,7 +146,7 @@ f.write(f"#PBS -N SFINCS\n")
 f.write(f"#PBS -P {args.project_code}\n")
 f.write(f"#PBS -q {args.qtype}\n")
 f.write(f"#PBS -l walltime={args.walltime:02d}:00:00\n")
-f.write(f"#PBS -l select=1:ncpus={args.ncpus}\n")
+f.write(f"#PBS -l select=1:ncpus={args.ncpus}:mem={args.memory}gb\n")
 f.write(f"module load gnu/gcc-12.3\n")
 f.write(f"module load hdf5/1.14.3-intel2023-parallel\n")
 f.write(f"cd $PBS_O_WORKDIR\n")

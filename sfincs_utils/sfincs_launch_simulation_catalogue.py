@@ -11,8 +11,20 @@ import os, sys
 import numpy as np
 import pandas as pd
 from pathlib import Path
+import argparse
 
-events_catalogue = '../EventsCatalogue__Jawa__TESTING__20250502.csv'
+parser = argparse.ArgumentParser()
+parser.add_argument("--correction_by", type=str,
+        default="-0.0")
+parser.add_argument("--resolution_m", type=int,
+        default=90)
+parser.add_argument("--jagurs_scale_ratio", type=float,
+        default=10000)
+args = parser.parse_args()
+
+#events_catalogue = '../EventsCatalogue__Jawa__TESTING__20250502.csv'
+
+events_catalogue = '/home/ignatius.pranantyo/Tsunamis/AOGS2025__StressCaseScenarios/EventsCatalogue__Sample__AOGS2025__20250513.csv'
 events_df = pd.read_csv(events_catalogue)
 
 sfincs_script = '/home/ignatius.pranantyo/apps/rf_eos_ntu/sfincs_utils/sfincs_build_event_model.py'
@@ -20,10 +32,13 @@ sfincs_script = '/home/ignatius.pranantyo/apps/rf_eos_ntu/sfincs_utils/sfincs_bu
 bc_points_csv_f = Path('/home/ignatius.pranantyo/Tsunamis/AOGS2025__StressCaseScenarios/SFINCS_config/vectors/domains_tile/points_open_bc_line_jawa.csv')
 bc_points_csv__path = bc_points_csv_f.parent
 
-sfincs_templates__path = '/home/ignatius.pranantyo/Tsunamis/AOGS2025__StressCaseScenarios/SFINCS_onshore_templates/DeltaDTM__correctedby-0.5m__update'
-resolution2run = 90
+correction = args.correction_by
+sfincs_templates__path = f'/home/ignatius.pranantyo/Tsunamis/AOGS2025__StressCaseScenarios/SFINCS_onshore_templates/DeltaDTM__correctedby{correction}m__update'
+#resolution2run = 90
+resolution2run = args.resolution_m
 
-sfincs_target__path = '/home/ignatius.pranantyo/Tsunamis/AOGS2025__StressCaseScenarios/SFINCS_onshore_simulations/SIMULATIONS'
+sfincs_target__path = Path(f'/home/ignatius.pranantyo/Tsunamis/AOGS2025__StressCaseScenarios/SFINCS_onshore_simulations/SIMULATIONS__AOGS2025/DeltaDTM__corrected_by_{correction}m__resolution_{resolution2run}m')
+sfincs_target__path.mkdir(exist_ok = True)
 
 ### start to launch simulations
 for ii in events_df.index:
@@ -50,7 +65,7 @@ for ii in events_df.index:
         bc_waterlevel = os.path.join(openbc__path, f'sfincs-open-bc__at__{tile}', 'extracted__SD01', f'timeseries__at_{bc_points_csv_f.name[:-4]}__{tile}.csv')
 
         ### run
-        cmd = f'python -W ignore {sfincs_script} --sfincs_template {sfincs_template} --target_dir {where2run_sfincs} --event_name {scenario} --domain_name {tile} --bc_waterlevel {bc_waterlevel} --bc_points_csv {bc_points_csv} --scale_ratio 1'
+        cmd = f'python -W ignore {sfincs_script} --sfincs_template {sfincs_template} --target_dir {where2run_sfincs} --event_name {scenario} --domain_name {tile} --bc_waterlevel {bc_waterlevel} --bc_points_csv {bc_points_csv} --scale_ratio {args.jagurs_scale_ratio}'
         print(cmd)
         os.system(cmd)
 
