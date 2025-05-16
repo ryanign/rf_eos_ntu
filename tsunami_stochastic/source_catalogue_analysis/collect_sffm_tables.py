@@ -22,8 +22,8 @@ def clean_up_sffm(sffm_df, grid_gdf):
     for src in sffm_df.index:
         flt_index_str = sffm_df.event_index_string[src]
         flt_slip_str  = sffm_df.event_slip_string[src]
-        flt_index = list(map(int, flt_index_str.split('-')[:-1]))
-        flt_slip  = list(map(float, flt_slip_str.split('_')[:-1]))
+        flt_index = list(map(str, flt_index_str.split('-')[:-1]))
+        flt_slip  = list(map(str, flt_slip_str.split('_')[:-1]))
         tmp_df = pd.DataFrame(data = {'unit_source_index' : flt_index,
                                       f'unit_source_slip__{src}'  : flt_slip})
         tmp_df.loc[-1] = ['target_lon', sffm_df['target_lon'][src]]
@@ -55,9 +55,6 @@ if __name__ == "__main__":
     parser.add_argument("--Mw_target", type = float,
                         default = 8.1,
                         help = "SFFM tables to be collected")
-    parser.add_argument("--what_to_collect", type = int,
-                        default = 1,
-                        help = "1: original SFFM tables from RPTHA, 2: simplified tables")
     parser.add_argument("--path_to_SFFM", type = str,
                         default = "/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/OUTPUTS__Slab2__Jawa/SourceCombinations__Mw8_5_to_8_7/stochastic_slips__SLAB2__Jawa")
     parser.add_argument("--sourcename", type = str,
@@ -81,7 +78,11 @@ if __name__ == "__main__":
     ### unit source filename
     unit_f = os.path.join(sffm_path, f"unit_source_grid_raster_filename_index__{args.sourcename}.csv")
     unit_df = pd.read_csv(unit_f)
-    unit_df = unit_df.rename(columns = {'Unnamed: 0' : 'unit_source_index',                                                                                'x'          : 'unit_source_filename'})
+    unit_df = unit_df.rename(
+            columns = {
+                'Unnamed: 0' : 'unit_source_index',
+                'x'          : 'unit_source_filename'}
+            )
 
     ### read SFFM grid polygon used
     grid_source = Path(args.grid_source)
@@ -109,9 +110,12 @@ if __name__ == "__main__":
 
 
     sys.exit()
-    elif args.what_to_collect == 2:
-        print(f"  going to collect simplified SFFM tables")
-        tables = glob.glob(os.path.join(sffm_path, f"stochastic_sources__Mw_{Mw:.6f}__Lon*__table_simplified.csv"))
+
+    """
+    DONE
+    DONE
+    DONE
+    """
         
 
 
