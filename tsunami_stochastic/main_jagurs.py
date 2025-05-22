@@ -29,8 +29,8 @@ def write_pbs(args):
     pbs.write(f"~/apps/miniconda3/bin/activate\n")
     pbs.write(f"conda activate tsunamis_py39\n")
     for nn in range(args.num_of_grids):
-        pbs.write(f"nccopy -d2 SD{nn:02d}.nc SD{nn:02d}_tmp.nc\n")
-        pbs.write(f"mv SD{nn:02d}_tmp.nc SD{nn:02d}.nc\n")
+        #pbs.write(f"nccopy -d2 SD{nn:02d}.nc SD{nn:02d}_tmp.nc\n")
+        #pbs.write(f"mv SD{nn:02d}_tmp.nc SD{nn:02d}.nc\n")
         pbs.write(f"python utils_compress_jagurs_nc.py --jagurs_nc SD{nn:02d}.nc\n")
     pbs.close()
 

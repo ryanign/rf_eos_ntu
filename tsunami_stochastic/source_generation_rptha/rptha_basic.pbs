@@ -1,8 +1,8 @@
-#PBS -N rptha
+#PBS -N SouthernJava
 #PBS -P eos_luca.dalzilio
 #PBS -q qintel_wfly
 #PBS -l walltime=48:00:00
-#PBS -l select=1:ncpus=8
+#PBS -l select=1:ncpus=16:mem=64gb
 
 module load gnu/gcc-12.3
 
@@ -15,5 +15,8 @@ conda activate rptha_py312
 
 R CMD INSTALL rptha_0.1.146.tar.gz
 module load gnu/gcc-12.3
+
+#Rscript make_initial_downdip_lines.R
+
 Rscript produce_unit_sources.R 1
 

@@ -120,11 +120,12 @@ if __name__ == "__main__":
             help = "bbox for plotting [xmin, xmax, ymin, ymax]")
     parser.add_argument("--export2grd", type=bool, default=True, #False,
             help = "convert to a grd file?")
-    parser.add_argument("--grd_bbox", type=float, default=[86,122,-17,18,0.0135],
+    parser.add_argument("--grd_bbox", type=float, nargs="+", default=[86,122,-17,18,0.0135],
             help = "disp grid file for JAGURS: xmin, xmax, ymin, ymax, resolution in degrees")
     parser.add_argument("--displacement_outdir", type=str, 
             default = "/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/OUTPUTS/displacement_ready2use",
             help = "where to save displacement grd file for JAGURS")
+    parser.add_argument("--plotting_source", type=bool, default=True)
 
     args = parser.parse_args()
     main_plotting(args)

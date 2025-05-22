@@ -7,11 +7,22 @@
 #
 # This file defines the subduction interface -- it is provided by the user
 #
-source_shapefile = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/input_files/sumatera_jawa__slab2__edited.shp'
+#source_shapefile = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/input_files/sumatera_jawa__slab2__edited.shp'
 
 # This file is created
-out_shapefile = '//home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/input_files/sumatera_jawa__slab2__downdip__edited.shp'
+#out_shapefile = '//home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/input_files/sumatera_jawa__slab2__downdip__edited.shp'
 
+#source_shapefile = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/input_files/PUSGEN2017_Segmentations/PUSGEN2017__SelatSundaMegathrust.shp'
+#out_shapefile = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/input_files/PUSGEN2017_Segmentations/PUSGEN2017__SelatSundaMegathrust__downdip.shp'
+
+#source_shapefile = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/input_files/PUSGEN2017_Segmentations/PUSGEN2017__WestCentralJavaMegathrust.shp'
+#out_shapefile = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/input_files/PUSGEN2017_Segmentations/PUSGEN2017__WestCentralJavaMegathrust__downdip.shp'
+
+#source_shapefile = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/input_files/SLAB2_Segmentations/SLAB2__SumatraJawa.shp'
+#out_shapefile = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/input_files/SLAB2_Segmentations/SLAB2__SumatraJawa__downdip.shp'
+
+source_shapefile = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/input_files/SLAB2_Segmentations/SLAB2__Jawa.shp'
+out_shapefile = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/input_files/SLAB2_Segmentations/SLAB2__Jawa__downdip.shp'
 
 desired_unit_source_length = 20
 

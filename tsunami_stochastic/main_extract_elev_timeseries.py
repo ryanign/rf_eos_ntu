@@ -16,7 +16,7 @@ import cartopy.crs as ccrs
 import xarray as xr
 import argparse
 from pathlib import Path
-from joblib import Parallel, delayed
+#from joblib import Parallel, delayed
 
 def haversine(lon1, lat1, lon2, lat2):
     """ 
@@ -78,53 +78,47 @@ def extract(args):
                        "id"  : "ID"})
 
     ### find index
-    idx_lon = np.zeros(len(station_df)).astype(int)
-    idx_lat = np.zeros(len(station_df)).astype(int)
+    #idx_lon = np.zeros(len(station_df)).astype(int)
+    #idx_lat = np.zeros(len(station_df)).astype(int)
     """
     STILL NEED TO MAKE SURE TO EXTRACT THE CORRECT INDEX
     """
     bc_df = pd.DataFrame()
     if args.var2extract == 1:
         data = nc.wave_height
-        #bc_df["time"] = data.time.astype("datetime64[s]")
     else:
         data = nc.max_height
 
     ### extract data
-    res = Parallel(n_jobs = args.ncpus)(delayed(extract_data)\
-            (data, station_df["LAT"][ii], station_df["LON"][ii]) for ii in station_df.index)
-    extracted = np.vstack(res).T   ### column is virtual point name
-    bc_df = pd.DataFrame(data = extracted, columns = station_df["NAME"])
-    if args.var2extract == 1:
-        bc_df["time"] = data.time.astype("datetime64[s]")
+    xx = xr.DataArray(station_df.LON, dims=['location'])
+    yy = xr.DataArray(station_df.LAT, dims=['location'])
+    extracted_data = data.sel(lon = xx, lat = yy, method = 'nearest')
 
-    
-    ### THIS IS SUPER SLOW! NEED TO UPDATE THIS PART!
-    #for idx in station_df.index:
-    #    idx_lon[idx], idx_lat[idx] = find_index(nc.lon.data, nc.lat.data, 
-    #            station_df["LON"][idx], station_df["LAT"][idx])
-    #station_df["idx_lat"] = idx_lat
-    #station_df["idx_lon"] = idx_lon
-    #
-    #    #bc_df[f"bc_{station_df['ID'][idx]}"] = data[:, idx_lon[idx], idx_lat[idx]]
-    #    ### if want to plot the timeseries extracted
-    #    if args.var2extract == 1:
-    #        bc_df[f"{station_df['ID'][idx]}"] = data[:, idx_lat[idx], idx_lon[idx]]
-    #        if args.plot_extracted == True:
-    #            plot_timeseries(data, idx_lon[idx], idx_lat[idx], station_df['NAME'][idx], where_to_save)
-    #    else:
-    #        bc_df[f"bc_{station_df['ID'][idx]}"] = data[idx_lon[idx], idx_lat[idx]]
+    if args.var2extract == 1:
+        bc_df = pd.DataFrame(data = np.zeros((len(extracted_data), len(station_df))), 
+                             columns = station_df['NAME'])
+        bc_df = bc_df.T          ### transpose to make my life easier
+        for tt in range(len(extracted_data)):
+            bc_df[tt] = extracted_data[tt].data
+        bc_df = bc_df.T          ### transpose back before saving
+        bc_df['time'] = data.time.astype('datetime64[s]')
+    else:
+        bc_df = pd.DataFrame(data = np.vstack(extracted_data.data).T, columns = station_df['NAME'])
+      
+
 
     ### save output
     bc_df.to_csv(fout, index=False)
 
     plot_map(station_df, where_to_save)
 
+    nc.close()
+
     return nc, station_df
 
-def extract_data(data, target_lat, target_lon):
-    extracted = data.sel(lon = target_lon, lat = target_lat, method = "nearest")
-    return extracted.values
+#def extract_data(data, target_lat, target_lon):
+#    extracted = data.sel(lon = target_lon, lat = target_lat, method = "nearest")
+#    return extracted.values
 
 
 def plot_timeseries(data, ilon, ilat, name, where_to_save):
@@ -168,8 +162,8 @@ if __name__ == "__main__":
             help = "1: extract elevation timeseries, 2: extract maximum elevation")
     parser.add_argument("--plot_extracted", type=bool, default = False,
             help = "True or False, plotting the extracted data, for now only for the timeseries")
-    parser.add_argument("--ncpus", type=int, default = 8,
-            help = "Num of cpus to use to extract elevation timeseries")
+    #parser.add_argument("--ncpus", type=int, default = 8,
+    #        help = "Num of cpus to use to extract elevation timeseries")
     args = parser.parse_args()
 
     nc, station_df = extract(args)

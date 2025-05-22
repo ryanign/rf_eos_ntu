@@ -15,12 +15,35 @@ suppressPackageStartupMessages(library(raster))
 
 # A vector with shapefile names for all contours that we want to convert to
 # unit sources
-all_sourcezone_shapefiles = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/input_files/sumatera_jawa__slab2__edited.shp'
-all_sourcezone_downdip_shapefiles = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/input_files/sumatera_jawa__slab2__downdip__edited.shp'
+#all_sourcezone_shapefiles = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/input_files/sumatera_jawa__slab2__edited.shp'
+#all_sourcezone_downdip_shapefiles = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/input_files/sumatera_jawa__slab2__downdip__edited.shp'
+
+#all_sourcezone_shapefiles = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/contours/PUSGEN2017__SelatSundaMegathrust.shp'
+#all_sourcezone_downdip_shapefiles = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/downdips/PUSGEN2017__SelatSundaMegathrust__downdip.shp'
+
+#all_sourcezone_shapefiles = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/contours/PUSGEN2017__WestCentralJavaMegathrust.shp'
+#all_sourcezone_downdip_shapefiles = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/downdips/PUSGEN2017__WestCentralJavaMegathrust__downdip.shp'
+
+#all_sourcezone_shapefiles = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/contours/PUSGEN2017__EastJavaMegathrust.shp'
+#all_sourcezone_downdip_shapefiles = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/downdips/PUSGEN2017__EastJavaMegathrust__downdip.shp'
+
+#all_sourcezone_shapefiles = Sys.glob('/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/contours/*.shp')
+#all_sourcezone_downdip_shapefiles = Sys.glob('/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/downdips/*.shp')
+
+#all_sourcezone_shapefiles = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/contours/SLAB2__SumatraJawa.shp'
+#all_sourcezone_downdip_shapefiles = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/downdips/SLAB2__SumatraJawa__downdip.shp'
+
+###SLAB2
+##SOUTHERN JAVA ALL
+all_sourcezone_shapefiles = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/contours/SLAB2__Jawa.shp'
+all_sourcezone_downdip_shapefiles = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/downdips/SLAB2__Jawa__downdip.shp'
+output_base_dir = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/OUTPUTS__Slab2__Jawa__rerun/'
+
+
 
 # Desired unit source geometric parameters
 desired_subfault_length = 20 # km
-desired_subfault_width = 20 # km
+desired_subfault_width = 10 #20 # km
 
 # A vector with the desired rake angle (one entry per sourcezone)
 sourcezone_rake = rep(90, len=length(all_sourcezone_shapefiles)) # degrees
@@ -105,7 +128,7 @@ cell_integration_scale = c(2000, 2000)
 
 # Number of cores for parallel parts. Values > 1 will only work on shared
 # memory linux machines.
-MC_CORES = 4 
+MC_CORES = 16
 
 # Option to illustrate 3d interactive plot creation
 #
@@ -121,7 +144,12 @@ make_pdf_plot = FALSE
 minimise_tsunami_unit_source_output = TRUE
 
 # Location to save outputs. Make sure it ends with a '/'
-output_base_dir = '../OUTPUTS/'
+#output_base_dir = '../OUTPUTS/'
+#output_base_dir = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/OUTPUTS__SouthernJava__EastJava/'
+#output_base_dir = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/OUTPUTS__SouthernJava__AllSources/'
+#output_base_dir = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/OUTPUTS__Slab2/'
+
+
 # Make it if it does not exist!
 dir.create(output_base_dir, recursive=TRUE, showWarnings=FALSE)
 

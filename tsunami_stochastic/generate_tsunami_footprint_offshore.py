@@ -66,7 +66,7 @@ def offshore_footprint(args):
                 gf_01 = gf_01 * slip                                                #### G(i) * m(i)
                 initial_disp += gf_01.initial_displacement
                 max_height += gf_01.max_height
-                wave_height =+ gf_01.wave_height
+                wave_height += gf_01.wave_height
             
                 gf_01.close()
                 status = "generate_footprint"
@@ -76,23 +76,31 @@ def offshore_footprint(args):
                 status = "do_not_generate_footprint"
 
         if status == "generate_footprint":
-            dcp = dtemp.copy()  
-            dcp.initial_displacement.data = initial_disp
-            dcp.max_height.data = max_height
-            dcp.wave_height.data = wave_height
-        
+            dcp = dtemp.copy()
+            dcp.initial_displacement.data = initial_disp.astype("int16")
+            dcp.max_height.data = max_height.astype("int16")
+            dcp.wave_height.data = wave_height.astype("int16")
+
+            pd_time = pd.Timestamp.now()
+            time_now = f"{pd_time.year:04d}-{pd_time.month:02d}-{pd_time.day:02d} {pd_time.hour:02d}:{pd_time.minute:02d}"
+            for var in list(dcp):
+                dcp[var].attrs.update( 
+                        units = "cm",
+                        description = f"Prepared by Ryan Pranantyo\nResearch Fellow at Earth Observatory of Singapore\n{time_now}"
+                        )
+
             ### check result throug figure
             fig = plt.figure(figsize=(10,5), constrained_layout = True)
             ax1 = fig.add_subplot(1,2,1, projection=ccrs.PlateCarree())
             ax1.coastlines()
-            disp = ax1.imshow(initial_disp[0], 
+            disp = ax1.imshow(initial_disp[0] / 10000.,  ### for quick visualisation, converted back to m
                     extent = [dtemp.lon.min(), dtemp.lon.max(), dtemp.lat.min(), dtemp.lat.max()],
                     vmin = -1, vmax = 1, cmap = "RdBu_r",
                     origin="lower")
             fig.colorbar(disp, orientation="horizontal", extend="both")
             ax2 = fig.add_subplot(1,2,2, projection=ccrs.PlateCarree())
             ax2.coastlines()
-            fpmax = ax2.imshow(max_height,
+            fpmax = ax2.imshow(max_height / 10000., ### converted back to m for visualisation
                     extent = [dtemp.lon.min(), dtemp.lon.max(), dtemp.lat.min(), dtemp.lat.max()],
                     vmin = 0, vmax = 2, cmap = "hot_r",
                     origin="lower")
@@ -102,13 +110,13 @@ def offshore_footprint(args):
             plt.close()
         
             ### export a new netcdf, aggregation
+            comp = dict(zlib = True, complevel = 5)
+            encoding = {var: comp for var in dcp.data_vars}
             fout = os.path.join(outdir, f"footprints__sample_num__{nn}.nc")
-            dcp.to_netcdf(fout)
+            dcp.to_netcdf(fout, encoding = encoding)
             dcp.close()
 
     dtemp.close()
-
-
 
     return df, dfn, dcp
 
