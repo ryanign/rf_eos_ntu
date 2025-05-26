@@ -14,7 +14,8 @@ import cmcrameri.cm as cm
 from pathlib import Path
 
 ### catalogue
-catalogue_f = Path("/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/earthquake_catalogue__region/20250520__cat_6.5-8_100k.dat")
+Mw_max = 8.7
+catalogue_f = Path("/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/earthquake_catalogue__region/20250526__cat_6.5-8.7_100k.dat")
 cat_df = pd.read_fwf(catalogue_f, header = None)
 cat_df = cat_df.rename(columns = {0 : 'TIME', 1 : 'Mw', 2 : 'LON', 3 : 'LAT', 4 : 'NN'})
 
@@ -33,8 +34,8 @@ NYears = 100000
 a_val = 5.99
 b_val = 1.15
 
-Mw_bins = np.arange(6.45, 8.05, 0.1)
-Mw_ticks = np.arange(6.5, 8.1, 0.1)
+Mw_bins = np.arange(6.45, Mw_max + 0.05, 0.1)
+Mw_ticks = np.arange(6.5, Mw_max, 0.1)
 #hist , _ = np.histogram(cat_df['Mw'], bins = Mw_bins)
 
 GR_X_yr = 10**( a_val - b_val * Mw_ticks) * NYears

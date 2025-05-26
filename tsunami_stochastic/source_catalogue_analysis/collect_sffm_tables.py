@@ -13,7 +13,7 @@ import argparse
 import glob
 from pathlib import Path
 
-def clean_up_sffm(sffm_df, grid_gdf):
+def clean_up_sffm__slow(sffm_df, grid_gdf):
     print("cleaning up SFFM model")
     df = pd.DataFrame()
     unit_source_index = (np.arange(len(grid_gdf))+1).astype(int)
@@ -34,6 +34,66 @@ def clean_up_sffm(sffm_df, grid_gdf):
         tmp_df.loc[-6] = ['sourcename', sffm_df['sourcename'][src]]
         df = pd.merge(df, tmp_df, on='unit_source_index', how='left')
     return df, grid_gdf
+
+def clean_up_sffm(sffm_df, grid_gdf):
+    print("merging into one big SFFM DataFrame")
+    unit_source_index = (np.arange(len(grid_gdf))+1).astype(int)
+
+    # initial DataFrame
+    meta_rows = [
+            ['target_lon'] + [np.nan] * len(unit_source_index),
+            ['target_lat'] + [np.nan] * len(unit_source_index),
+            ['Mw'] + [np.nan] * len(unit_source_index),
+            ['physical_corner_wavenumber_x'] + [np.nan] * len(unit_source_index),
+            ['physical_corner_wavenumber_y'] + [np.nan] * len(unit_source_index),
+            ['sourcename'] + [np.nan] * len(unit_source_index),
+            ]
+
+    # start with base DF
+    df_base = pd.DataFrame({'unit_source_index' : unit_source_index})
+    all_dfs = [df_base]
+
+    # start the loop
+    for src in sffm_df.index:
+        # get slip data
+        flt_index_str = sffm_df.event_index_string[src]
+        flt_slip_str  = sffm_df.event_slip_string[src]
+        flt_index = list(map(int, flt_index_str.split('-')[:-1]))
+        flt_slip  = list(map(float, flt_slip_str.split('_')[:-1]))
+        #flt_index_str = sffm_df.at[src, 'event_index_string'],
+        #flt_slip_str = sffm_df.at[src, 'event_slip_string']
+        #flt_index = flt_index_str.split('-')[:-1]
+        #flt_slip = flt_slip_str.splot('_')[:-1]
+
+        tmp_dict = {
+                'unit_source_index' : flt_index,
+                f'unit_source_slip__{src}' : flt_slip,
+        }
+
+        tmp_df = pd.DataFrame(tmp_dict)
+
+        # add meta information rows
+        meta_data = [
+                ['target_lon', sffm_df.at[src, 'target_lon']],
+                ['target_lat', sffm_df.at[src, 'target_lat']],
+                ['Mw', sffm_df.at[src, 'Mw']],
+                ['physical_corner_wavenumber_x', sffm_df.at[src, 'physical_corner_wavenumber_x']],
+                ['physical_corner_wavenumber_y', sffm_df.at[src, 'physical_corner_wavenumber_y']],
+                ['sourcename', sffm_df.at[src, 'sourcename']]
+                ]
+
+        meta_df = pd.DataFrame(meta_data, columns = ['unit_source_index', f'unit_source_slip__{src}'])
+
+        # combine slips and meta rows
+        combined_df = pd.concat([tmp_df, meta_df], ignore_index = True)
+        all_dfs.append(combined_df)
+
+    # final merge
+    df = df_base
+    for d in all_dfs[1:]:
+        df = df.merge(d, on='unit_source_index', how='left')
+
+    return df
 
 def collect_sffm_original(tables):
     print(len(tables))
