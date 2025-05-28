@@ -106,7 +106,7 @@ def check_epi_inside_rupture_area(grid_gdf, target_lon, target_lat):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--SFFM_file", type = str,
-                        default = "/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/OUTPUTS__Slab2__Jawa/SourceCombinations__20250523/stochastic_slips__SLAB2__Jawa/stochastic_sources__Mw_8.000000__Lon_116.894850__Lat_-9.251680__table.csv",
+                        default = "/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/OUTPUTS__Slab2__Jawa/SourceCombinations__20250523/stochastic_slips__SLAB2__Jawa/stochastic_sources__Mw_8.600000__Lon_109.300140__Lat_-9.782850__table.csv",
                         help = "file of SFFM generated")
     parser.add_argument("--sourcename", type = str,
                         default = "SLAB2__Jawa",
@@ -169,20 +169,28 @@ if __name__ == "__main__":
 
     ### building a DataFrame of SFFM
     sffm_df = pd.read_csv(sffm_f)
-    df = pd.DataFrame()
     unit_source_index = (np.arange(len(grid_gdf))+1).astype(int)
-    additional = ['target_lon', 'target_lat', 'Mw', 'physical_corner_wavenumber_x', 'physical_corner_wavenumber_y', 'sourcename']
-    df['unit_source_index'] = np.hstack([unit_source_index, additional])
+    slip_df = pd.DataFrame(data = unit_source_index,
+                           columns = ['unit_source_index'])
+    info_df = pd.DataFrame(data = ['target_lon', 
+                                   'target_lat', 
+                                   'Mw', 
+                                   'physical_corner_wavenumber_x', 
+                                   'physical_corner_wavenumber_y', 
+                                   'sourcename'],
+                           columns = ['unit_source_index'])
+
+    #df['unit_source_index'] = np.hstack([unit_source_index, additional])
     for src in sffm_df.index:
         flt_index_str = sffm_df.event_index_string[src]
         flt_slip_str  = sffm_df.event_slip_string[src]
         flt_index = list(map(int, flt_index_str.split('-')[:-1]))
         flt_slip  = list(map(float, flt_slip_str.split('_')[:-1]))
-        tmp_df = pd.DataFrame(data = {f'unit_source_slip__{src}' : flt_slip,
+        check_tmp_df = pd.DataFrame(data = {f'unit_source_slip__{src}' : flt_slip,
                                       'unit_source_index' : flt_index},
                               index = flt_index)
 
-        grid_gdf['slip'] = tmp_df[f'unit_source_slip__{src}']
+        grid_gdf['slip'] = check_tmp_df[f'unit_source_slip__{src}']
 
         target_lon = sffm_df['target_lon'][src]
         target_lat = sffm_df['target_lat'][src]
@@ -192,6 +200,28 @@ if __name__ == "__main__":
         realistic = check_sffm_realistic(grid_gdf)
 
         if inside == True and realistic == True:
+            tmp_df = pd.DataFrame(data = {f'unit_source_slip__{src}' : flt_slip,
+                                          f'unit_source_index' : flt_index},
+                                  index = flt_index)
+
+            info1 = [sffm_df['target_lon'][src],
+                     sffm_df['target_lat'][src],
+                     sffm_df['Mw'][src],
+                     sffm_df['physical_corner_wavenumber_x'][src],
+                     sffm_df['physical_corner_wavenumber_y'][src],
+                     sffm_df['sourcename'][src]]
+            info2 = ['target_lon',
+                     'target_lat',
+                     'Mw',
+                     'physical_corner_wavenumber_x',
+                     'physical_corner_wavenumber_y',
+                     'sourcename']
+            inftmp_df = pd.DataFrame(data = {f'unit_source_slip__{src}' : info1,
+                                             f'unit_source_index' : info2})
+            
+            slip_df = slip_df.merge(tmp_df, on='unit_source_index', how = 'left')
+            info_df = info_df.merge(inftmp_df, on='unit_source_index', how = 'left')
+
             if args.SFFM_plot == True: 
                 fig = plt.figure(figsize = (fwidth, fheight), constrained_layout = True)
                 ax = fig.add_subplot(1,1,1, projection=ccrs.PlateCarree())
@@ -222,16 +252,32 @@ if __name__ == "__main__":
                 plt.close()
 
             ### constructing a DF
-            tmp_df.loc[-1] = ['target_lon', sffm_df['target_lon'][src]]
-            tmp_df.loc[-2] = ['target_lat', sffm_df['target_lat'][src]]
-            tmp_df.loc[-3] = ['Mw', sffm_df['Mw'][src]]
-            tmp_df.loc[-4] = ['physical_corner_wavenumber_x', sffm_df['physical_corner_wavenumber_x'][src]]
-            tmp_df.loc[-5] = ['physical_corner_wavenumber_y', sffm_df['physical_corner_wavenumber_y'][src]]
-            tmp_df.loc[-6] = ['sourcename', sffm_df['sourcename'][src]]
-            df = pd.merge(df, tmp_df, on='unit_source_index', how='left')
+            #slip_df = pd.merge([slip_df, tmp_df], on='unit_source_index', how = 'left')
+            #info_df = pd.merge([info_df, inftmp_df], on='unit_source_index', how = 'left')
 
-    df = pd.concat([df, unit_df], axis=1)
-    df = df.loc[:, ~df.columns.duplicated()]
+            #trgt_idx = df.index[df['unit_source_index'] == 'target_lon'].to_list()[0]
+            #tmp_df.loc[trgt_idx] = [sffm_df['target_lon'][src], 'target_lon']
+
+            #trgt_idx = df.index[df['unit_source_index'] == 'target_lat'].to_list()[0]
+            #tmp_df.loc[trgt_idx] = [sffm_df['target_lat'][src], 'target_lat']
+
+            #trgt_idx = df.index[df['unit_source_index'] == 'Mw'].to_list()[0]
+            #tmp_df.loc[trgt_idx] = [sffm_df['Mw'][src], 'Mw']
+
+            #trgt_idx = df.index[df['unit_source_index'] == 'physical_corner_wavenumber_x'].to_list()[0]
+            #tmp_df.loc[trgt_idx] = [sffm_df['physical_corner_wavenumber_x'][src], 'physical_corner_wavenumber_x']
+
+            #trgt_idx = df.index[df['unit_source_index'] == 'physical_corner_wavenumber_y'].to_list()[0]
+            #tmp_df.loc[trgt_idx] = [sffm_df['physical_corner_wavenumber_y'][src], 'physical_corner_wavenumber_y']
+            #
+            #trgt_idx = df.index[df['unit_source_index'] == 'sourcename'].to_list()[0]
+            #tmp_df.loc[trgt_idx] = [sffm_df['sourcename'][src], 'sourcename']
+            #df = pd.merge(df, tmp_df, on='unit_source_index', how='left')
+    
+    slip_df = slip_df.fillna(0)                                     ### NaN slip convert to 0.0
+    df = pd.concat([slip_df, unit_df], axis=1)                      ### concate with unitsourcefilename
+    df = df.loc[:, ~df.columns.duplicated()]                        ### remove duplicates columns
+    df = pd.concat([df, info_df], axis=0)                           ### concate info_df
     print(df)
 
     ### saving realistic SFFM into a file 
