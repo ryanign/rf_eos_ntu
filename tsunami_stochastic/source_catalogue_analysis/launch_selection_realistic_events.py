@@ -9,7 +9,7 @@ import glob
 from joblib import Parallel, delayed
 from joblib.externals.loky import get_reusable_executor
 
-ncpus = 6
+ncpus = 8
 script = 'select_realistic_events.py'
 
 #SFFM_files = ['/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/OUTPUTS__Slab2__Jawa/SourceCombinations__20250523/stochastic_slips__SLAB2__Jawa/stochastic_sources__Mw_8.300000__Lon_107.687250__Lat_-8.436890__table.csv',

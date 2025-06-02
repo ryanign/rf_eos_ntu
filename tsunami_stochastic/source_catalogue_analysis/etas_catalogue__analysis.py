@@ -34,8 +34,8 @@ NYears = 100000
 a_val = 5.99
 b_val = 1.15
 
-Mw_bins = np.arange(6.45, Mw_max + 0.05, 0.1)
-Mw_ticks = np.arange(6.5, Mw_max, 0.1)
+Mw_bins = np.arange(6.45, Mw_max + 0.15, 0.1)
+Mw_ticks = np.arange(6.5, Mw_max + 0.10, 0.1)
 #hist , _ = np.histogram(cat_df['Mw'], bins = Mw_bins)
 
 GR_X_yr = 10**( a_val - b_val * Mw_ticks) * NYears
@@ -44,7 +44,7 @@ plt.close()
 fig = plt.figure(figsize = (10,5), constrained_layout = True)
 ax = fig.add_subplot(1,1,1)
 ax.hist(cat_df['Mw'], bins = Mw_bins, color="blue", label="from Pepe")
-ax.plot(Mw_ticks, GR_X_yr, c="black", label=f"a={a_val}; b={b_val}")
+#ax.plot(Mw_ticks, GR_X_yr, c="black", label=f"a={a_val}; b={b_val}")
 ax.set_xticks(Mw_ticks)
 ax.set_xlabel("Mw")
 ax.set_ylabel("Num of events")

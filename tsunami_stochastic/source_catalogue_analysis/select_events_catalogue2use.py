@@ -98,22 +98,25 @@ def find_sffm_to_use(SFFM_path, SFFM_f_fmt, df, bg_df, Mw = 7.3):
             bg_f = bg_df[bg_df['SFFM_filename'] == sffm_f]
             if len(bg_f) > 0:
                 bg_sample = bg_f['SFFM_src_id']
+                bg_sample = bg_sample[bg_sample != np.zeros]
                 sffm_samples_id = sffm_samples_id.drop(bg_sample)
 
-            for jj in etas_xx_yy.index:
-                df.loc[jj, "SFFM_filename"] = sffm_f
-                if len(sffm_samples_id) > 0:
-                    df.loc[jj, "SFFM_src_id"] = sffm_samples_id[0]
-                    sffm_samples_id = sffm_samples_id.drop(sffm_samples_id[0])
-                else:
-                    df.loc[jj, "SFFM_src_id"] = "need more realisastion"
+            if len(sffm_samples_id) > 0:
+                for kk in etas_xx_yy.index:
+                    df.loc[kk, "SFFM_filename"] = sffm_f
+                    if len(sffm_samples_id) > 0:
+                        df.loc[kk, "SFFM_src_id"] = sffm_samples_id[0]
+                        sffm_samples_id = sffm_samples_id.drop(sffm_samples_id[0])
+                    #else:
+                    #    df.loc[jj, "SFFM_src_id"] = "need more realisastion"
     return df
 
 ###############################################################################
 
 ### MAIN CODE
 # list of 2D ETAS Catalogue
-etas_catalogue_f = Path("/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/earthquake_catalogue__region/20250526__cat_6.5-8_100k.dat")
+#etas_catalogue_f = Path("/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/earthquake_catalogue__region/20250526__cat_6.5-8_100k.dat")
+etas_catalogue_f = Path("/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/earthquake_catalogue__region/20250602__cat_6.5-8.7_100k_5samples.dat")
 etas_df = pd.read_fwf(etas_catalogue_f, header = None)
 etas_df = etas_df.rename(columns = {0 : 'TIME', 1 : 'Mw', 2 : 'LON', 3 : 'LAT', 4 : 'NN'})
 
@@ -148,38 +151,100 @@ I will group the mapping based on (i) target_Mw and (ii) closest_lon and closest
 """
 
 ### initiate the first round of look up the SFFM to use
+print(f"\n first round ...")
 etas_df = find_closest_coordinates(etas_df, epi_df, order=0)
 
 for Mw in np.sort(etas_df['target_Mw'].unique()):
     etas_df = find_sffm_to_use(SFFM_path, SFFM_f_fmt, etas_df, etas_df, Mw)
 
-### second round
-etas2nd_df = find_closest_coordinates(
-                etas_df[etas_df['SFFM_src_id'] == 'need more realisastion'],
-                epi_df,
-                1)
-for Mw in np.sort(etas2nd_df['target_Mw'].unique()):
-    etas2nd_df = find_sffm_to_use(SFFM_path, SFFM_f_fmt, etas2nd_df, etas_df, Mw)
+### if need second round
+if len(etas_df[etas_df['SFFM_src_id'] == np.zeros]) > 0:
+    print(f"\n second round ...")
+    etas2nd_df = find_closest_coordinates(
+                    etas_df[etas_df['SFFM_src_id'] == np.zeros],
+                    epi_df,
+                    1)
+    for Mw in np.sort(etas2nd_df['target_Mw'].unique()):
+        etas2nd_df = find_sffm_to_use(SFFM_path, SFFM_f_fmt, etas2nd_df, etas_df, Mw)
+    etas_df = etas_df[etas_df['SFFM_src_id'] != np.zeros]
+    round_2nd = True
+else:
+    round_2nd = False
+
+
+### FROM BELOW IS NOT THAT EFFECTIVE!
+### MIGHT NEED TO CHANGE!
+
 
 ### if need 3rd round
-if len(etas2nd_df[etas2nd_df['SFFM_src_id'] == 'need more realisastion']) > 0:
+if len(etas2nd_df[etas2nd_df['SFFM_src_id'] == np.zeros]) > 0:
+    print(f"\n third round ...")
     etas3rd_df = find_closest_coordinates(
-                    etas2nd_df[etas2nd_df['SFFM_src_id'] == 'need more realisastion'],
+                    etas2nd_df[etas2nd_df['SFFM_src_id'] == np.zeros],
                     epi_df,
                     2)
     for Mw in np.sort(etas3rd_df['target_Mw'].unique()):
         etas3rd_df = find_sffm_to_use(SFFM_path, SFFM_f_fmt, etas3rd_df, etas2nd_df, Mw)
-    etas2nd_df = etas2nd_df[etas2nd_df['SFFM_src_id'] != 'need more realisastion']
+    etas2nd_df = etas2nd_df[etas2nd_df['SFFM_src_id'] != np.zeros]
     round_3rd = True
 else:
     round_3rd = False
 
-### merging all back into one DF
-collect_df = etas_df[etas_df['SFFM_src_id'] != 'need more realisastion']
-collect_df = pd.concat([collect_df, etas2nd_df])
+### if need 4th round
+if len(etas3rd_df[etas3rd_df['SFFM_src_id'] == np.zeros]) > 0:
+    print(f"\n fourth round ...")
+    etas4th_df = find_closest_coordinates(
+                    etas3rd_df[etas3rd_df['SFFM_src_id'] == np.zeros],
+                    epi_df,
+                    3)
+    for Mw in np.sort(etas4th_df['target_Mw'].unique()):
+        etas4th_df = find_sffm_to_use(SFFM_path, SFFM_f_fmt, etas4th_df, etas3rd_df, Mw)
+    etas3rd_df = etas3rd_df[etas3rd_df['SFFM_src_id'] != np.zeros]
+    round_4th = True
+else:
+    round_4th = False
 
-if round_3rd == True:
-    collect_df = pd.concat([collect_df, etas3rd_df])
+### if need 5th round
+if len(etas4th_df[etas4th_df['SFFM_src_id'] == np.zeros]) > 0:
+    print(f"\n fifth round ...")
+    etas5th_df = find_closest_coordinates(
+                    etas4th_df[etas4th_df['SFFM_src_id'] == np.zeros],
+                    epi_df,
+                    4)
+    for Mw in np.sort(etas5th_df['target_Mw'].unique()):
+        etas5th_df = find_sffm_to_use(SFFM_path, SFFM_f_fmt, etas5th_df, etas4th_df, Mw)
+    etas4th_df = etas4th_df[etas4th_df['SFFM_src_id'] != np.zeros]
+    round_5th = True
+else:
+    round_5th = False
+
+### if need 5th round
+if len(etas5th_df[etas5th_df['SFFM_src_id'] == np.zeros]) > 0:
+    print(f"\n sixth round ...")
+    etas6th_df = find_closest_coordinates(
+                    etas5th_df[etas5th_df['SFFM_src_id'] == np.zeros],
+                    epi_df,
+                    5)
+    for Mw in np.sort(etas6th_df['target_Mw'].unique()):
+        etas6th_df = find_sffm_to_use(SFFM_path, SFFM_f_fmt, etas6th_df, etas5th_df, Mw)
+    etas5th_df = etas5th_df[etas5th_df['SFFM_src_id'] != np.zeros]
+    round_6th = True
+else:
+    round_6th = False
+
+### merging all back into one DF
+collect_df = etas_df[etas_df['SFFM_src_id'] != np.zeros]
+if round_2nd == True and round_3rd == False and round_4th == False and round_5th == False and round_6th == False:
+    collect_df = pd.concat([collect_df, etas2nd_df])
+elif round_2nd == True and round_3rd == True and round_4th == False and round_5th == False and round_6th == False:
+    collect_df = pd.concat([collect_df, etas2nd_df, etas3rd_df])
+elif round_2nd == True and round_3rd == True and round_4th == True and round_5th == False and round_6th == False:
+    collect_df = pd.concat([collect_df, etas2nd_df, etas3rd_df, etas4th_df])
+elif round_2nd == True and round_3rd == True and round_4th == True and round_5th == True and round_6th == False:
+    collect_df = pd.concat([collect_df, etas2nd_df, etas3rd_df, etas4th_df, etas5th_df])
+elif round_2nd == True and round_3rd == True and round_4th == True and round_5th == True and round_6th == True:
+    collect_df = pd.concat([collect_df, etas2nd_df, etas3rd_df, etas4th_df, etas5th_df, etas6th_df])
+
 
 
 ### saving
