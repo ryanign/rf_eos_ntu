@@ -15,7 +15,7 @@ from pathlib import Path
 
 ### catalogue
 Mw_max = 8.7
-catalogue_f = Path("/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/earthquake_catalogue__region/20250526__cat_6.5-8.7_100k.dat")
+catalogue_f = Path("/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/earthquake_catalogue__region/20250603__cat_6.5-8.7_100k__7-CATALOGUES.dat")
 cat_df = pd.read_fwf(catalogue_f, header = None)
 cat_df = cat_df.rename(columns = {0 : 'TIME', 1 : 'Mw', 2 : 'LON', 3 : 'LAT', 4 : 'NN'})
 
@@ -70,7 +70,7 @@ plt.close()
 ### spatial catalogue - BASIC!
 fig = plt.figure(figsize = (10, 5), constrained_layout = True)
 ax = fig.add_subplot(1,1,1, projection=ccrs.PlateCarree())
-ax.set_title(f"Catalogue Mw 6.5 to 8.0 (proposed)")
+ax.set_title(f"Catalogue Mw 6.5 to 8.7 (proposed)")
 ax.coastlines(linewidth = 0.5)
 
 bbox.plot(ax = ax, ec = "gray", fc = "None", linewidth = 0.1)

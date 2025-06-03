@@ -53,7 +53,7 @@ if __name__ == "__main__":
     parser.add_argument("--grid_source", type = str,
                         default = "/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/OUTPUTS__Slab2__Jawa/unit_source_grid/SLAB2__Jawa.shp")
     parser.add_argument("--plot_SFFMs", type = bool,
-                        default = True,
+                        default = False,
                         help = "plotting individual SFFM up to the first 70 models")
     args = parser.parse_args()
 
@@ -61,12 +61,17 @@ if __name__ == "__main__":
     ### let's go!
 
     catalogue_f = Path(args.catalogue_f)
+    cat_fname = catalogue_f.name[:-4]
     figures_path = Path(os.path.join(catalogue_f.parent, "figures"))
     figures_path.mkdir(exist_ok = True)
     
     ### load the catalogue
     df = pd.read_csv(catalogue_f)
     df = df[df["target_Mw"] == args.Mw]
+
+    if len(df) == 0:
+        print(f'you do not have event of Mw {args.Mw} in this catalogue!')
+        sys.exit()
 
     ### load the grid source
     grid_gdf = gpd.read_file(args.grid_source)
@@ -149,7 +154,7 @@ if __name__ == "__main__":
         ax.set_ylim(grid_ymin, grid_ymax)
 
 
-        fout = os.path.join(figures_path, f'stat_{stat}__Mw{args.Mw}__N-SFFM_{len(df.index)}.png')
+        fout = os.path.join(figures_path, f'{cat_fname}__stat_{stat}__Mw{args.Mw}__N-SFFM_{len(df.index)}.png')
         fig.savefig(fout)
         plt.close()
 

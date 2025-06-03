@@ -116,7 +116,7 @@ def find_sffm_to_use(SFFM_path, SFFM_f_fmt, df, bg_df, Mw = 7.3):
 ### MAIN CODE
 # list of 2D ETAS Catalogue
 #etas_catalogue_f = Path("/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/earthquake_catalogue__region/20250526__cat_6.5-8_100k.dat")
-etas_catalogue_f = Path("/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/earthquake_catalogue__region/20250602__cat_6.5-8.7_100k_5samples.dat")
+etas_catalogue_f = Path("/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/earthquake_catalogue__region/20250603__cat_6.5-8.7_100k__7-CATALOGUES.dat")
 etas_df = pd.read_fwf(etas_catalogue_f, header = None)
 etas_df = etas_df.rename(columns = {0 : 'TIME', 1 : 'Mw', 2 : 'LON', 3 : 'LAT', 4 : 'NN'})
 
@@ -164,9 +164,11 @@ if len(etas_df[etas_df['SFFM_src_id'] == np.zeros]) > 0:
                     etas_df[etas_df['SFFM_src_id'] == np.zeros],
                     epi_df,
                     1)
-    for Mw in np.sort(etas2nd_df['target_Mw'].unique()):
-        etas2nd_df = find_sffm_to_use(SFFM_path, SFFM_f_fmt, etas2nd_df, etas_df, Mw)
     etas_df = etas_df[etas_df['SFFM_src_id'] != np.zeros]
+    bg_df = etas_df
+    for Mw in np.sort(etas2nd_df['target_Mw'].unique()):
+        etas2nd_df = find_sffm_to_use(SFFM_path, SFFM_f_fmt, etas2nd_df, bg_df, Mw)
+    #etas_df = etas_df[etas_df['SFFM_src_id'] != np.zeros]
     round_2nd = True
 else:
     round_2nd = False
@@ -183,54 +185,73 @@ if len(etas2nd_df[etas2nd_df['SFFM_src_id'] == np.zeros]) > 0:
                     etas2nd_df[etas2nd_df['SFFM_src_id'] == np.zeros],
                     epi_df,
                     2)
-    for Mw in np.sort(etas3rd_df['target_Mw'].unique()):
-        etas3rd_df = find_sffm_to_use(SFFM_path, SFFM_f_fmt, etas3rd_df, etas2nd_df, Mw)
     etas2nd_df = etas2nd_df[etas2nd_df['SFFM_src_id'] != np.zeros]
+    bg_df = pd.concat([etas_df, etas2nd_df])
+    for Mw in np.sort(etas3rd_df['target_Mw'].unique()):
+        etas3rd_df = find_sffm_to_use(SFFM_path, SFFM_f_fmt, etas3rd_df, bg_df, Mw)
+    #etas2nd_df = etas2nd_df[etas2nd_df['SFFM_src_id'] != np.zeros]
     round_3rd = True
 else:
     round_3rd = False
 
 ### if need 4th round
-if len(etas3rd_df[etas3rd_df['SFFM_src_id'] == np.zeros]) > 0:
+if round_3rd == True and len(etas3rd_df[etas3rd_df['SFFM_src_id'] == np.zeros]) > 0:
     print(f"\n fourth round ...")
     etas4th_df = find_closest_coordinates(
                     etas3rd_df[etas3rd_df['SFFM_src_id'] == np.zeros],
                     epi_df,
                     3)
-    for Mw in np.sort(etas4th_df['target_Mw'].unique()):
-        etas4th_df = find_sffm_to_use(SFFM_path, SFFM_f_fmt, etas4th_df, etas3rd_df, Mw)
     etas3rd_df = etas3rd_df[etas3rd_df['SFFM_src_id'] != np.zeros]
+    bg_df = pd.concat([etas_df, etas2nd_df, etas3rd_df])
+    for Mw in np.sort(etas4th_df['target_Mw'].unique()):
+        etas4th_df = find_sffm_to_use(SFFM_path, SFFM_f_fmt, etas4th_df, bg_df, Mw)
+    #etas3rd_df = etas3rd_df[etas3rd_df['SFFM_src_id'] != np.zeros]
     round_4th = True
 else:
     round_4th = False
 
 ### if need 5th round
-if len(etas4th_df[etas4th_df['SFFM_src_id'] == np.zeros]) > 0:
+if round_4th == True and len(etas4th_df[etas4th_df['SFFM_src_id'] == np.zeros]) > 0:
     print(f"\n fifth round ...")
     etas5th_df = find_closest_coordinates(
                     etas4th_df[etas4th_df['SFFM_src_id'] == np.zeros],
                     epi_df,
                     4)
-    for Mw in np.sort(etas5th_df['target_Mw'].unique()):
-        etas5th_df = find_sffm_to_use(SFFM_path, SFFM_f_fmt, etas5th_df, etas4th_df, Mw)
     etas4th_df = etas4th_df[etas4th_df['SFFM_src_id'] != np.zeros]
+    bg_df = pd.concat([etas_df, etas2nd_df, etas3rd_df, etas4th_df])
+    for Mw in np.sort(etas5th_df['target_Mw'].unique()):
+        etas5th_df = find_sffm_to_use(SFFM_path, SFFM_f_fmt, etas5th_df, bg_df, Mw)
+    #etas4th_df = etas4th_df[etas4th_df['SFFM_src_id'] != np.zeros]
     round_5th = True
 else:
     round_5th = False
 
-### if need 5th round
-if len(etas5th_df[etas5th_df['SFFM_src_id'] == np.zeros]) > 0:
+### if need 6th round
+if round_5th == True and len(etas5th_df[etas5th_df['SFFM_src_id'] == np.zeros]) > 0:
     print(f"\n sixth round ...")
     etas6th_df = find_closest_coordinates(
                     etas5th_df[etas5th_df['SFFM_src_id'] == np.zeros],
                     epi_df,
                     5)
-    for Mw in np.sort(etas6th_df['target_Mw'].unique()):
-        etas6th_df = find_sffm_to_use(SFFM_path, SFFM_f_fmt, etas6th_df, etas5th_df, Mw)
     etas5th_df = etas5th_df[etas5th_df['SFFM_src_id'] != np.zeros]
+    bg_df = pd.concat([etas_df, etas2nd_df, etas3rd_df, etas4th_df, etas5th_df])
+    for Mw in np.sort(etas6th_df['target_Mw'].unique()):
+        etas6th_df = find_sffm_to_use(SFFM_path, SFFM_f_fmt, etas6th_df, bg_df, Mw)
+    #etas5th_df = etas5th_df[etas5th_df['SFFM_src_id'] != np.zeros]
     round_6th = True
 else:
     round_6th = False
+
+
+### check after round 6th if we still have empty SFFM_filename and SFFM_src_id
+### potentially they come from small Mw events
+if round_6th == True:
+    check_df = etas6th_df[etas6th_df['SFFM_src_id'] != np.zeros]
+    if len(check_df) == 0:
+        print(f'events below will be removed as we would need more realisastion events and it is tricky!')
+        print(etas6th_df)
+        etas6th_df = etas6th_df[etas6th_df['SFFM_src_id'] != np.zeros]
+
 
 ### merging all back into one DF
 collect_df = etas_df[etas_df['SFFM_src_id'] != np.zeros]
@@ -245,13 +266,14 @@ elif round_2nd == True and round_3rd == True and round_4th == True and round_5th
 elif round_2nd == True and round_3rd == True and round_4th == True and round_5th == True and round_6th == True:
     collect_df = pd.concat([collect_df, etas2nd_df, etas3rd_df, etas4th_df, etas5th_df, etas6th_df])
 
-
+### cleaning up if there are still empty SFFM_filename and SFFM_src_id
+collect_df = collect_df[collect_df['SFFM_src_id'] != np.zeros]
 
 ### saving
 where_to_save = etas_catalogue_f.parent
 fname = f'{etas_catalogue_f.name}__EVENT_LIST__Mw{Mw_threshold}+.csv'
 fout = os.path.join(where_to_save, fname)
-collect_df.to_csv(fout)
+collect_df.to_csv(fout, index = False)
 
 print(fout)
 print(collect_df)
