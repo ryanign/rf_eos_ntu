@@ -116,9 +116,29 @@ def find_sffm_to_use(SFFM_path, SFFM_f_fmt, df, bg_df, Mw = 7.3):
 ### MAIN CODE
 # list of 2D ETAS Catalogue
 #etas_catalogue_f = Path("/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/earthquake_catalogue__region/20250526__cat_6.5-8_100k.dat")
-etas_catalogue_f = Path("/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/earthquake_catalogue__region/20250603__cat_6.5-8.7_100k__7-CATALOGUES.dat")
+etas_catalogue_f = Path("/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/earthquake_catalogue__region/20250603__cat_6.5-8.7_100k__CATALOGUE-7.dat")
 etas_df = pd.read_fwf(etas_catalogue_f, header = None)
 etas_df = etas_df.rename(columns = {0 : 'TIME', 1 : 'Mw', 2 : 'LON', 3 : 'LAT', 4 : 'NN'})
+
+### in case we have older catalogues and we do not want to simulate similar events
+older_catalogue_f = [
+        "/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/earthquake_catalogue__region/20250526__cat_6.5-8.7_100k__CATALOGUE-1.dat__EVENT_LIST__Mw6.95+__updated.csv",
+        "/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/earthquake_catalogue__region/20250603__cat_6.5-8.7_100k__CATALOGUE-2.dat__EVENT_LIST__Mw6.95+.csv",
+        "/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/earthquake_catalogue__region/20250603__cat_6.5-8.7_100k__CATALOGUE-3.dat__EVENT_LIST__Mw6.95+.csv",
+        "/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/earthquake_catalogue__region/20250603__cat_6.5-8.7_100k__CATALOGUE-4.dat__EVENT_LIST__Mw6.95+.csv",
+        "/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/earthquake_catalogue__region/20250603__cat_6.5-8.7_100k__CATALOGUE-5.dat__EVENT_LIST__Mw6.95+.csv",
+        "/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/earthquake_catalogue__region/20250603__cat_6.5-8.7_100k__CATALOGUE-6.dat__EVENT_LIST__Mw6.95+.csv",
+
+        ]
+
+
+if older_catalogue_f is not None:
+    # merging older catalogues into one
+    mstr_bg_df = pd.DataFrame()
+    for cc in older_catalogue_f:
+        mstr_bg_df = pd.concat([mstr_bg_df, pd.read_csv(cc)], axis=0)
+#sys.exit()
+
 
 # list of centroids used to generate random slip models
 #random_slip_epicentre_f = Path("/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/input_files/SLAB2__Jawa__Centroids__reduced.csv")
@@ -153,9 +173,13 @@ I will group the mapping based on (i) target_Mw and (ii) closest_lon and closest
 ### initiate the first round of look up the SFFM to use
 print(f"\n first round ...")
 etas_df = find_closest_coordinates(etas_df, epi_df, order=0)
+if older_catalogue_f is not None:
+    bg_df = mstr_bg_df
+else:
+    bg_df = etas_df
 
 for Mw in np.sort(etas_df['target_Mw'].unique()):
-    etas_df = find_sffm_to_use(SFFM_path, SFFM_f_fmt, etas_df, etas_df, Mw)
+    etas_df = find_sffm_to_use(SFFM_path, SFFM_f_fmt, etas_df, bg_df, Mw)
 
 ### if need second round
 if len(etas_df[etas_df['SFFM_src_id'] == np.zeros]) > 0:
@@ -165,7 +189,12 @@ if len(etas_df[etas_df['SFFM_src_id'] == np.zeros]) > 0:
                     epi_df,
                     1)
     etas_df = etas_df[etas_df['SFFM_src_id'] != np.zeros]
-    bg_df = etas_df
+    
+    if older_catalogue_f is not None:
+        bg_df = pd.concat([mstr_bg_df, etas_df])
+    else:
+        bg_df = etas_df
+
     for Mw in np.sort(etas2nd_df['target_Mw'].unique()):
         etas2nd_df = find_sffm_to_use(SFFM_path, SFFM_f_fmt, etas2nd_df, bg_df, Mw)
     #etas_df = etas_df[etas_df['SFFM_src_id'] != np.zeros]
@@ -179,14 +208,19 @@ else:
 
 
 ### if need 3rd round
-if len(etas2nd_df[etas2nd_df['SFFM_src_id'] == np.zeros]) > 0:
+if round_2nd == True and len(etas2nd_df[etas2nd_df['SFFM_src_id'] == np.zeros]) > 0:
     print(f"\n third round ...")
     etas3rd_df = find_closest_coordinates(
                     etas2nd_df[etas2nd_df['SFFM_src_id'] == np.zeros],
                     epi_df,
                     2)
     etas2nd_df = etas2nd_df[etas2nd_df['SFFM_src_id'] != np.zeros]
-    bg_df = pd.concat([etas_df, etas2nd_df])
+    
+    if older_catalogue_f is not None:
+        bg_df = pd.concat([mstr_bg_df, etas_df, etas2nd_df])
+    else:
+        bg_df = pd.concat([etas_df, etas2nd_df])
+
     for Mw in np.sort(etas3rd_df['target_Mw'].unique()):
         etas3rd_df = find_sffm_to_use(SFFM_path, SFFM_f_fmt, etas3rd_df, bg_df, Mw)
     #etas2nd_df = etas2nd_df[etas2nd_df['SFFM_src_id'] != np.zeros]
@@ -202,7 +236,12 @@ if round_3rd == True and len(etas3rd_df[etas3rd_df['SFFM_src_id'] == np.zeros]) 
                     epi_df,
                     3)
     etas3rd_df = etas3rd_df[etas3rd_df['SFFM_src_id'] != np.zeros]
-    bg_df = pd.concat([etas_df, etas2nd_df, etas3rd_df])
+    
+    if older_catalogue_f is not None:
+        bg_df = pd.concat([mstr_bg_df, etas_df, etas2nd_df, etas3rd_df])
+    else:
+        bg_df = pd.concat([etas_df, etas2nd_df, etas3rd_df])
+    
     for Mw in np.sort(etas4th_df['target_Mw'].unique()):
         etas4th_df = find_sffm_to_use(SFFM_path, SFFM_f_fmt, etas4th_df, bg_df, Mw)
     #etas3rd_df = etas3rd_df[etas3rd_df['SFFM_src_id'] != np.zeros]
@@ -218,7 +257,12 @@ if round_4th == True and len(etas4th_df[etas4th_df['SFFM_src_id'] == np.zeros]) 
                     epi_df,
                     4)
     etas4th_df = etas4th_df[etas4th_df['SFFM_src_id'] != np.zeros]
-    bg_df = pd.concat([etas_df, etas2nd_df, etas3rd_df, etas4th_df])
+    
+    if older_catalogue_f is not None:
+        bg_df = pd.concat([mstr_bg_df, etas_df, etas2nd_df, etas3rd_df, etas4th_df])
+    else:
+        bg_df = pd.concat([etas_df, etas2nd_df, etas3rd_df, etas4th_df])
+
     for Mw in np.sort(etas5th_df['target_Mw'].unique()):
         etas5th_df = find_sffm_to_use(SFFM_path, SFFM_f_fmt, etas5th_df, bg_df, Mw)
     #etas4th_df = etas4th_df[etas4th_df['SFFM_src_id'] != np.zeros]
@@ -234,7 +278,12 @@ if round_5th == True and len(etas5th_df[etas5th_df['SFFM_src_id'] == np.zeros]) 
                     epi_df,
                     5)
     etas5th_df = etas5th_df[etas5th_df['SFFM_src_id'] != np.zeros]
-    bg_df = pd.concat([etas_df, etas2nd_df, etas3rd_df, etas4th_df, etas5th_df])
+
+    if older_catalogue_f is not None:
+        bg_df = pd.concat([mstr_bg_df, etas_df, etas2nd_df, etas3rd_df, etas4th_df, etas5th_df])
+    else:
+        bg_df = pd.concat([etas_df, etas2nd_df, etas3rd_df, etas4th_df, etas5th_df])
+
     for Mw in np.sort(etas6th_df['target_Mw'].unique()):
         etas6th_df = find_sffm_to_use(SFFM_path, SFFM_f_fmt, etas6th_df, bg_df, Mw)
     #etas5th_df = etas5th_df[etas5th_df['SFFM_src_id'] != np.zeros]
@@ -269,6 +318,9 @@ elif round_2nd == True and round_3rd == True and round_4th == True and round_5th
 ### cleaning up if there are still empty SFFM_filename and SFFM_src_id
 collect_df = collect_df[collect_df['SFFM_src_id'] != np.zeros]
 
+
+#sys.exit()
+
 ### saving
 where_to_save = etas_catalogue_f.parent
 fname = f'{etas_catalogue_f.name}__EVENT_LIST__Mw{Mw_threshold}+.csv'
@@ -300,157 +352,4 @@ print(collect_df)
 
 
 
-sys.exit()
-for Mw in np.sort(etas_df['target_Mw'].unique()):
-    print(Mw)
-    etas_Mw = etas_df[etas_df["target_Mw"] == Mw].copy()
-
-    unique_coords = set(zip(etas_Mw['closest_lon'], etas_Mw['closest_lat']))
-    for jj, pts in enumerate(unique_coords):
-        #print(xx, yy)
-        etas_xx_yy = etas_Mw[etas_Mw['closest_lon'] == pts[0]]
-        etas_xx_yy = etas_Mw[etas_Mw['closest_lat'] == pts[1]]
-        #print(etas_xx_yy)
-
-        ### find SFFM file:
-        sffm_f = os.path.join(SFFM_path, SFFM_f_fmt.format(Mw, pts[0], pts[1]))
-        if os.path.exists(sffm_f) == False:
-            print('not available')
-            etas_df.loc[jj, "SFFM_filename"] = np.zeros
-            etas_df.loc[jj, "SFFM_src_id"] = np.zeros
-        else:
-            sffm_df = pd.read_csv(sffm_f)
-            sffm_samples_id = sffm_df.columns[1:-1]
-
-            for jj in etas_xx_yy.index:
-                etas_df.loc[jj, "SFFM_filename"] = sffm_f
-                if len(sffm_samples_id) > 0:
-                    etas_df.loc[jj, "SFFM_src_id"] = sffm_samples_id[0]
-                    sffm_samples_id = sffm_samples_id.drop(sffm_samples_id[0])
-                else:
-                    etas_df.loc[jj, "SFFM_src_id"] = "need more realisastion"
-
-print(etas_df)
-
-
-
-
-sys.exit()
-sys.exit()
-
-
-sys.exit()
-for ii in etas_df.index:
-    ### find the closest lon and lat from SFFM database
-    target_lon = etas_df["LON"][ii]
-    target_lat = etas_df["LAT"][ii]
-    distances = haversine_dist(target_lon, target_lat, epi_df["lon"], epi_df["lat"])
-    min_idx = np.argmin(distances)
-    etas_df.loc[ii, "closest_lon"] = epi_df["lon"][min_idx]
-    etas_df.loc[ii, "closest_lat"] = epi_df["lat"][min_idx]
-
-    ### find SFFM file
-    target_Mw = etas_df["target_Mw"][ii]
-
-    # check if available
-    if os.path.exists(sffm_f):
-        print(ii, f"available")
-        etas_df.loc[ii, "SFFM_filename"] = sffm_f
-
-        sffm_df = pd.read_csv(sffm_f)
-        slip_samples = slip_df.columns[1:-1].to_list()
-
-sys.exit()
-
-
-### assign SFFM to use
-print(f"Looking for SFFM realisation to use")
-for Mw in np.sort(etas_df["target_Mw"].unique()):
-    print(f" target Mw = {Mw}")
-    # temp filtering
-    etas_Mw = etas_df[etas_df["target_Mw"] == Mw].copy()
-    etas_Mw["SFFM_filename"] = np.zeros
-    etas_Mw["SFFM_src_id"] = np.zeros
-    
-    SFFM_f = os.path.join(SFFM_path, SFFM_f_fmt.format(Mw))
-    df = pd.read_csv(SFFM_f, low_memory = False)
-    #sffm_df = df.iloc[:-6]
-    #info_df = df.iloc[-6:]
-    
-    for ii in etas_Mw.index:
-        ### to find the closest lon and lat from SFFM generated
-        target_lon = etas_df["LON"][ii]
-        target_lat = etas_df["LAT"][ii]
-        distances = haversine_dist(target_lon, target_lat, epi_df["lon"], epi_df["lat"])
-        min_idx = np.argmin(distances)
-        etas_Mw.loc[ii, "closest_lon"] = epi_df["lon"][min_idx]
-        etas_Mw.loc[ii, "closest_lat"] = epi_df["lat"][min_idx]
-        #etas_df.loc[ii, "target_Mw"] = np.round(etas_df['Mw'][ii], decimals = 1)
-
-    
-        ### start to find SFFM to use
-        target_x = etas_Mw["closest_lon"][ii]
-        target_y = etas_Mw["closest_lat"][ii]
-
-        sffm_sample_id = df.columns[np.isin(df.values, [str(target_x), str(target_y)]).any(0)].tolist()
-        #print(sffm_sample_id)
-
-        if len(sffm_sample_id) >= 1:
-            ##THERE IS A CHANCE THAT I WILL TAKE THE SAME sffm_sample_id,
-            ##mainly because of the target_Mw, target_x, and target_y are same values
-            ##to avoid this, I remove sffm_sample_id[0] after it has been assigned to the first
-            ##   duplicate event
-            ##
-            ##Let's say:
-            ## - event_1 and event_2 have same target_Mw, target_x, and target_y; and
-            ## - sffm_sample_id = ['sffm_89', 'sffm_111', 'sffm_345']
-            ##Hence:
-            ## - event_1 will get 'sffm_89' -- then 'sffm_89' will be removed from df.columns
-            ## - event_2 will get 'sffm_111'
-            ##
-            ##BUT, if there are three events but we only have two sffm_sample_id:
-            ## the 3rd event will not be assigned sffm_model. Therefore, we would need another set of SFFM 
-            ##
-            ##I think, the option is to generate another set of SFFM then merge with the last set seperately
-
-            etas_Mw.loc[ii, "SFFM_filename"] = SFFM_f
-            etas_Mw.loc[ii, "SFFM_src_id"  ] = sffm_sample_id[0]
-            df = df.drop(columns=[sffm_sample_id[0]])
-
-            ### giving EVENTID
-            ntime = f"{etas_Mw['TIME'][ii].astype(int):010d}"
-            nMw_tmp = etas_Mw["target_Mw"][ii].astype(str).split('.')
-            nMw = '_'.join(nMw_tmp)
-            nLon_tmp = etas_Mw["closest_lon"][ii].astype(str).split('.')
-            nLon = '_'.join(nLon_tmp)
-            nLat_tmp = etas_Mw["closest_lat"][ii].astype(str).split('.')
-            nLat = '_'.join(nLat_tmp)
-            sample_id = sffm_sample_id[0].split('__')[-1]
-            EVENTID = f"{ntime}__Mw_{nMw}__Sample_{sample_id}__Lon_{nLon}__Lat_{nLat}"
-            etas_Mw.loc[ii, "EVENTID"] = EVENTID
-
-    ### remove np.zeros SFFM_filename and SFFM_src_id
-    etas_Mw = etas_Mw[etas_Mw["SFFM_src_id"] != np.zeros]
-    ### remove duplications at SFFM_filename and SFFM_src_id
-    ### means, I need more realisation
-    etas_Mw = etas_Mw.drop_duplicates(subset = ["SFFM_filename", "SFFM_src_id"], keep="first")
-
-    etas_df.loc[etas_Mw.index, "SFFM_filename"] = etas_Mw.loc[etas_Mw.index, "SFFM_filename"]
-    etas_df.loc[etas_Mw.index, "SFFM_src_id"] = etas_Mw.loc[etas_Mw.index, "SFFM_src_id"]
-
-
-print(f"\n===============================")
-print(f"NEED MORE REALISASTION SFFM ...")
-print(etas_df[etas_df["SFFM_filename"] == np.zeros])
-print(f"===============================\n")
-
-print(f"\n===============================")
-print(f"READY TO USE ...")
-print(etas_df[etas_df["SFFM_filename"] != np.zeros])
-print(f"===============================\n")
-
-
-###
-# RESERVED FOR SAVING THE OUTPUT
-###
 sys.exit()
