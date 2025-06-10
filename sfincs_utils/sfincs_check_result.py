@@ -17,6 +17,9 @@ from hydromt import DataCatalog
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 
+import rasterio
+import rioxarray
+
 from pathlib import Path
 
 ### what to check
@@ -90,8 +93,9 @@ plt.close()
 
 ### export to GTiff
 sf.write_raster("results.hmax", compress="LZW")
-
-
+land_flood = da_h.where(dem >=0, np.nan)
+land_flood_epsg = land_flood.rio.reproject("EPSG:4326")
+land_flood_epsg.rio.to_raster("./gis/hmax_onland__epsg4326.tif", driver="GTiff", compress="LZW")
 
 def plot_snapshots(t, da_h, dem):
     print(t)
