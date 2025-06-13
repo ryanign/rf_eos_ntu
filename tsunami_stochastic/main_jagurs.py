@@ -19,7 +19,7 @@ def write_pbs(args):
     pbs.write(f"#PBS -P {args.project_code}\n")
     pbs.write(f"#PBS -q {args.qtype}\n")
     pbs.write(f"#PBS -l walltime={args.walltime:02d}:00:00\n")
-    pbs.write(f"#PBS -l select=1:ncpus={args.ncpus}\n")
+    pbs.write(f"#PBS -l select=1:ncpus={args.ncpus}:mem={args.memory}gb\n")
     pbs.write(f"cd $PBS_O_WORKDIR\n")
     pbs.write(f"module load openmpi/4.1.1\n")
     pbs.write(f"export LD_LIBRARY_PATH='LD_LIBRARY_PATH':/home/ignatius.pranantyo/apps/mylibs/proj-4.9.3/lib:/home/ignatius.pranantyo/apps/mylibs/netcdf-fortran-4.5.3/lib\n")
@@ -86,6 +86,8 @@ if __name__ == "__main__":
                         help = "number of cpus requested to run this job")
     parser.add_argument("--num_of_grids", type=int, default = 2,
                         help = "nested grids used in gridfile.dat")
+    parser.add_argument("--memory", type=int, default = 32,
+                        help = "RAM requested to simulate JAGURS")
 
     args = parser.parse_args()
 

@@ -172,9 +172,9 @@ if __name__ == "__main__":
         EVENTID = df["EVENTID"][ii]
         disp2check_f = os.path.join(args.DISP_COMPILATION_PATH, f"{EVENTID}.grd")
         if os.path.exists(disp2check_f):
-            print(f"drop index {ii}) for the generation")
+            print(f"drop index {ii} for the generation")
             index2drop.append(ii)
-    df.drop(index = index2drop)
+    df = df.drop(index = index2drop)
 
 
     plotting_source = args.plotting_source
@@ -186,7 +186,7 @@ if __name__ == "__main__":
             sys.exit()
         
     
-    
+    #sys.exit()    
     ### ncpus
     if len(df) > 0:
         ncpus = args.ncpus

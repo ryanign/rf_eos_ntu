@@ -11,4 +11,18 @@ source /home/ignatius.pranantyo/.bashrc
 ~/apps/miniconda3/bin/activate 
 conda activate tsunamis_py39
 
-time python -W ignore generate_tsunami_footprint_offshore.py --SFFM_model /home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/OUTPUTS/stochastic_slips__sumatera_jawa__slab2__edited/stochastic_sources__Mw_8.400000__Lon_107.288800__Lat_-7.132900__table_simplified.csv --where_to_save /home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/jagurs_runs/uji_coba/tsunami_footprints/checking/
+#time python -W ignore generate_tsunami_footprint_offshore.py --SFFM_model /home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/OUTPUTS/stochastic_slips__sumatera_jawa__slab2__edited/stochastic_sources__Mw_8.400000__Lon_107.288800__Lat_-7.132900__table_simplified.csv --tsunami_gf_path /scratch/ignatius.pranantyo/tsunami_gf__2700m/ --where_to_save /scratch/ignatius.pranantyo/tsunami_footprints__2700m/ --Nsamples 1
+
+#time python -W ignore generate_tsunami_footprint_offshore.py --SFFM_model /home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/OUTPUTS/stochastic_slips__sumatera_jawa__slab2__edited/stochastic_sources__Mw_8.400000__Lon_107.288800__Lat_-7.132900__table_simplified.csv --tsunami_gf_path /scratch/ignatius.pranantyo/tsunami_gf__2700m_in_integer10000/ --where_to_save /scratch/ignatius.pranantyo/tsunami_footprints__2700m_in_integer10000/ --Nsamples 25
+
+#time python -W ignore generate_tsunami_footprint_offshore.py --SFFM_model /home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/OUTPUTS/stochastic_slips__sumatera_jawa__slab2__edited/stochastic_sources__Mw_8.000000__Lon_103.867900__Lat_-7.180900__table_simplified.csv --tsunami_gf_path /scratch/ignatius.pranantyo/tsunami_gf__2700m_in_integer10000/ --where_to_save /scratch/ignatius.pranantyo/tsunami_footprints__2700m_in_integer10000/ --Nsamples 25
+
+
+#time python -W ignore generate_tsunami_footprint_offshore.py --SFFM_model /home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/OUTPUTS/stochastic_slips__sumatera_jawa__slab2__edited/stochastic_sources__Mw_8.000000__Lon_105.052200__Lat_-7.582800__table_simplified.csv --tsunami_gf_path /scratch/ignatius.pranantyo/tsunami_gf__2700m_in_integer10000/ --where_to_save /scratch/ignatius.pranantyo/tsunami_footprints__2700m_in_integer10000/ --Nsamples 25
+#
+
+#time python -W ignore generate_tsunami_footprint_offshore.py --SFFM_model /home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/OUTPUTS/stochastic_slips__sumatera_jawa__slab2__edited/stochastic_sources__Mw_7.900000__Lon_105.288300__Lat_-7.553500__table_simplified.csv --tsunami_gf_path /scratch/ignatius.pranantyo/tsunami_gf__2700m_in_integer10000/ --where_to_save /scratch/ignatius.pranantyo/tsunami_footprints__2700m_in_integer10000/ --Nsamples 25
+#
+#time python -W ignore generate_tsunami_footprint_offshore.py --SFFM_model /home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/OUTPUTS/stochastic_slips__sumatera_jawa__slab2__edited/stochastic_sources__Mw_7.900000__Lon_105.233600__Lat_-7.923100__table_simplified.csv --tsunami_gf_path /scratch/ignatius.pranantyo/tsunami_gf__2700m_in_integer10000/ --where_to_save /scratch/ignatius.pranantyo/tsunami_footprints__2700m_in_integer10000/ --Nsamples 25
+
+time python -W ignore generate_tsunami_footprint_offshore.py --SFFM_model /home/ignatius.pranantyo/Tsunamis/SensitivityTests__ModelResolutions/2006_SouthernJava/stochastic_samples/ffm_random_models/stochastic_slips__sumatera_jawa__slab2__edited/stochastic_sources__Mw_7.700000__Lon_108.303200__Lat_-9.259400__table_simplified.csv --tsunami_gf_path /scratch/ignatius.pranantyo/tsunami_gf__2700m_in_integer10000/ --where_to_save /home/ignatius.pranantyo/Tsunamis/SensitivityTests__ModelResolutions/2006_SouthernJava/stochastic_samples/ffm_random_models/footprints__2700m_integer10000 --Nsamples 25
