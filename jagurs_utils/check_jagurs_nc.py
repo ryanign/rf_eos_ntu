@@ -86,7 +86,7 @@ def tsunami_max_footprint(infile, scale_ratio, dem, XX, YY):
     ax = fig.add_subplot(1,1,1, projection=ccrs.PlateCarree())
     ax.set_title(f"Max tsunami elevation {fname} [m]", pad=0.01)
     #ax.coastlines(zorder=100)
-    disp = ax.imshow(nc.data / scale_ratio, vmin=0, vmax=np.nanmax(nc.data / scale_ratio),
+    disp = ax.imshow(nc.data / scale_ratio, vmin=0, vmax=np.nanmax(nc.data / scale_ratio)*0.25,
             extent=[xmin, xmax, ymin, ymax], cmap="hot_r",
             origin="lower")
     fig.colorbar(disp, orientation="vertical",
