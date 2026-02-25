@@ -109,6 +109,7 @@ def tsunami_max_footprint(infile, scale_ratio, dem, XX, YY):
 
 def tsunami_footprint_timeseries(infile, vmin, vmax, t0, t1, scale_ratio, dem, XX, YY):
     print(infile, vmin, vmax, t0, t1)
+    print('plotting tsunami footprint timeseries')
     nc = xr.open_dataset(infile)
     nc = nc["wave_height"]
 
@@ -121,7 +122,7 @@ def tsunami_footprint_timeseries(infile, vmin, vmax, t0, t1, scale_ratio, dem, X
 
     for ii, tt in enumerate(nc.time[t0:t1]):
         time = pd.to_datetime(tt.values)
-        string = f"{time.hour:02d}:{time.minute:02d} __ {fname}"
+        string = f"{time.hour:02d}:{time.minute:02d}:{time.second:02d} __ {fname}"
         fig = plt.figure(figsize = (fwidth, fheight), constrained_layout = True)
         ax = fig.add_subplot(1,1,1, projection=ccrs.PlateCarree())
         ax.set_title(f"{string} {fname} [m]", pad=0.01)
@@ -138,18 +139,66 @@ def tsunami_footprint_timeseries(infile, vmin, vmax, t0, t1, scale_ratio, dem, X
         if dem is not None and XX is not None and YY is not None:   
             ax.contour(XX, YY, dem[::-1], [0], colors='white', zorder=100, linewidths=2)
 
-        fout = os.path.join(fig_dir, f"footprint_{ii:04d}__{fname}.png")
+        fout = os.path.join(fig_dir, f"footprint_tsunami_{ii:04d}__{fname}.png")
         fig.savefig(fout)
         plt.close(fig)
 
     ### convert to gif
-    inf = os.path.join(fig_dir, f"footprint_*__{fname}.png")
-    cmd = f"magick -delay 20 -loop 0 {inf} {fig_dir}/animation__{fname}.gif"
+    inf = os.path.join(fig_dir, f"footprint_tsunami_*__{fname}.png")
+    cmd = f"magick -delay 20 -loop 0 {inf} {fig_dir}/animation_tsunami__{fname}.gif"
     os.system(cmd)
     cmd = f"rm -f {inf}"
     os.system(cmd)
 
     return nc
+
+def displacement_footprint_timeseries(infile, vmin, vmax, t0, t1, scale_ratio, dem, XX, YY):
+    print(infile, vmin, vmax, t0, t1)
+    print('plotting displacement footprint timeseries')
+    nc = xr.open_dataset(infile)
+    times = nc['time']
+    nc = nc['initial_displacement']
+
+    fname = infile.name[:-3]
+    parent_dir = infile.parent
+    fig_dir = os.path.join(parent_dir, 'figures')
+
+    xmin, xmax, ymin, ymax, dlon, dlat = fig_extent(nc)
+    fwidth, fheight = fig_size(dlon, dlat)
+
+    for ii in range(nc.shape[0]):
+        time = pd.to_datetime(times[ii].values)
+        string = f'{time.hour:02d}:{time.minute:02d}:{time.second:02d} __ {fname}'
+        fig = plt.figure(figsize = (fwidth, fheight), constrained_layout=True)
+        ax = fig.add_subplot(1,1,1, projection=ccrs.PlateCarree())
+        ax.set_title(f'Displacement: {string} {fname} [m]', pad=0.01)
+        ax.coastlines(zorder=100)
+        disp = ax.imshow(nc.data[ii] / scale_ratio,
+                vmin=vmin, vmax=vmax,
+                extent=[xmin,xmax,ymin,ymax], cmap='RdBu_r',
+                origin='lower',)
+        fig.colorbar(disp, orientation='vertical',
+                extend='both', pad=0., shrink=0.8)
+        ax.set_xlim(xmin, xmax)
+        ax.set_ylim(ymin, ymax)
+
+        if dem is not None and XX is not None and YY is not None:
+            ax.contour(XX, YY, dem[::-1], [0], colors='white', zorder=100, linewidths=2)
+
+        fout = os.path.join(fig_dir, f'footprint_displacement_{ii:06d}__{fname}.png')
+        fig.savefig(fout)
+        plt.close(fig)
+
+    ### convert to gif
+    inf = os.path.join(fig_dir, f'footprint_displacement_*__{fname}.png')
+    cmd = f'magick -delay 20 -loop 0 {inf} {fig_dir}/animation_displacement__{fname}.gif'
+    print(cmd)
+    os.system(cmd)
+    cmd = f'rm -f {inf}'
+    os.system(cmd)
+
+    return nc
+
 
 def load_dem(dem_f):
     ds = xr.open_dataset(dem_f)
@@ -172,7 +221,7 @@ if __name__ == "__main__":
             help = "JAGURS nc output file")
     parser.add_argument("--what_to_check", type=int,
             default = 1,
-            help = "1: initial displacement; 2: tsunami max footprint; 3: tsunami footprint timeseries")
+            help = "1: initial displacement; 2: tsunami max footprint; 3: tsunami footprint timeseries; 4: displacement footprint timeseries")
     parser.add_argument("--vmin_vmax", type=float, nargs="+",
             default = [-1, 1],
             help = "vmin and vmax for colourmap")
@@ -203,6 +252,9 @@ if __name__ == "__main__":
             nc = tsunami_max_footprint(infile, args.scale_ratio, dem, XX, YY)
         elif args.what_to_check == 3:
             nc = tsunami_footprint_timeseries(infile, args.vmin_vmax[0], args.vmin_vmax[1], 
+                    args.t0_t1[0], args.t0_t1[1], args.scale_ratio, dem, XX, YY)
+        elif args.what_to_check == 4:
+            nc = displacement_footprint_timeseries(infile, args.vmin_vmax[0], args.vmin_vmax[1],
                     args.t0_t1[0], args.t0_t1[1], args.scale_ratio, dem, XX, YY)
         else:
             print("WRONG what_to_check CODE!")
