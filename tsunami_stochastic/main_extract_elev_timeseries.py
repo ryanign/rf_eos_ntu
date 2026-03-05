@@ -90,20 +90,41 @@ def extract(args):
         data = nc.max_height
 
     ### extract data
-    xx = xr.DataArray(station_df.LON, dims=['location'])
-    yy = xr.DataArray(station_df.LAT, dims=['location'])
-    extracted_data = data.sel(lon = xx, lat = yy, method = 'nearest')
+    ## SLOW!!!!
+    ##xx = xr.DataArray(station_df.LON, dims=['location'])
+    ##yy = xr.DataArray(station_df.LAT, dims=['location'])
+    ##extracted_data = data.sel(lon = xx, lat = yy, method = 'nearest')
+
+    """from claude AI"""
+    nc_lons = data.lon.values
+    nc_lats = data.lat.values
+    # find nearest indices
+    lon_idxs = np.argmin(np.abs(nc_lons[np.newaxis, :] - station_df.LON.values[:, np.newaxis]), axis=1)
+    lat_idxs = np.argmin(np.abs(nc_lats[np.newaxis, :] - station_df.LAT.values[:, np.newaxis]), axis=1)
 
     if args.var2extract == 1:
-        bc_df = pd.DataFrame(data = np.zeros((len(extracted_data), len(station_df))), 
-                             columns = station_df['NAME'])
-        bc_df = bc_df.T          ### transpose to make my life easier
-        for tt in range(len(extracted_data)):
-            bc_df[tt] = extracted_data[tt].data
-        bc_df = bc_df.T          ### transpose back before saving
-        bc_df['time'] = data.time.astype('datetime64[s]')
+        arr = data.values
+        extracted = arr[:, lat_idxs, lon_idxs]
+        bc_df = pd.DataFrame(
+                data = extracted,
+                columns = station_df['NAME'])
+        bc_df['time'] = data.time.values.astype('datetime64[s]')
+        
+        ### SLOW FOR BIG DATA !!!
+        ###bc_df = pd.DataFrame(data = np.zeros((len(extracted_data), len(station_df))), 
+        ###                     columns = station_df['NAME'])
+        ###bc_df = bc_df.T          ### transpose to make my life easier
+        ###for tt in range(len(extracted_data)):
+        ###    bc_df[tt] = extracted_data[tt].data
+        ###bc_df = bc_df.T          ### transpose back before saving
+        ###bc_df['time'] = data.time.astype('datetime64[s]')
     else:
-        bc_df = pd.DataFrame(data = np.vstack(extracted_data.data).T, columns = station_df['NAME'])
+        arr = data.values
+        extracted = arr[lat_idxs, lon_idxs]
+        bc_df = pd.DataFrame(
+                data = [extracted],
+                columns = station_df['NAME'])
+        #bc_df = pd.DataFrame(data = np.vstack(extracted_data.data).T, columns = station_df['NAME'])
       
 
 
@@ -155,7 +176,7 @@ if __name__ == "__main__":
     parser.add_argument("--jagurs_nc", type=str, default = "/scratch/ignatius.pranantyo/tsunami_footprints__2700m_in_integer10000/footprints_stochastic_sources__Mw_7.900000__Lon_105.233600__Lat_-7.923100__table_simplified/footprints__sample_num__24.nc",
             help = "JAGURS nc output file")
     parser.add_argument("--list_of_coordinates", type=str, default = "./input_examples/coordinates_jakarta_sukabumi.csv",
-            help = "a list of coordinates where to extract: ID, LON, LAT, (DEPTH)")
+            help = "a list of coordinates where to extract: ID, LON, LAT, NAME, (DEPTH)")
     parser.add_argument("--where_to_save", type=str, default = "./output_examples/timeseries",
             help = "where to save the extracted values")
     parser.add_argument("--var2extract", type=int, default = 1,
