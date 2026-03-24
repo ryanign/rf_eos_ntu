@@ -5,3 +5,6 @@ Outlines:
 - Building footprints will be assigned flood depth from all scenarios
 
 Ryan Pranantyo, EOS, 23 March 2026
+
+## Steps
+1. Execute assign_values_to_buildings.py
