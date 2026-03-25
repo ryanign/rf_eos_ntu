@@ -7,4 +7,5 @@ Outlines:
 Ryan Pranantyo, EOS, 23 March 2026
 
 ## Steps
-1. Execute assign_values_to_buildings.py
+1. Execute assign_values_to_buildings.py 
+2. Execute compute_hazard.py

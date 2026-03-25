@@ -3,15 +3,35 @@ Ryan Pranantyo
 EOS, 24 March 2026
 
 Description:
-    bla bla
+    Extract flood depth values from a NetCDF flood database for each buildings
+    in a shapefile. 
+
+    Procedures:
+    1. Rasterize building footprint polygons on the flood grid
+    2. For building smaller than 1 pixel, use centroid as fallback
+    3. For building covering multiple pixels, take the maximum value
+    4. Process scenarios in sequential batches 
+    5. Only process scenarios producing non-zero flood, fill the rest with 0
 
 Output:
-    -
+    flood_depth_matrix__<tile_name>.parquet
+        FID | event_1 | event_2 | ... | event_N
+        Flood depth values unit following the unit from the raw input.
+        in this case, I use cm (int16)
+        0 = not flooded or outside grid
 
 Useage:
+    python assign_values_to_buildings.py \\
+            --buildings /path/to/buildings.shp \\
+            --flood_db /path/to/flood_depth.nc (result from Pranantyo et al., 2026) \\
+            --output_dir /path/to/save/output/ \\
+            --tile_name tile_5__NLSWE \\ for naming purpose
+            --batch_size 100 \\ will be processed in batches
 
-
+Note:
+    Assisted by Claude (Anthropic, claude.ai) to make the script efficient and easier to follow
 """
+
 import os
 import time
 import warnings
