@@ -23,7 +23,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import argparse
-
+from tqdm import tqdm
 
 def histogram_buildings(input_file, output_dir):
     print(f'=== PLOTTING HISTOGRAM OF BUILDINGS AFFECTED ===')
@@ -33,7 +33,15 @@ def histogram_buildings(input_file, output_dir):
     cols = df.columns[[c for c in df.columns!='FID']]
 
     # number of buildings affected per-scenario
-    n_buildings = (df[cols]>0).sum(axis=0)
+    ##n_buildings = (df[cols]>0).sum(axis=0)
+    # count in batches
+    BATCH_SIZE = 50000
+    n_buildings   = len(df)
+    _n_scenarios_ = np.zeros(len(cols)).astype(int)
+    for start in tqdm(range(0, n_buildings, BATCH_SIZE), desc='  Processing'):
+        end = min(start + BATCH_SIZE, n_buildings)
+        df_rows = df.iloc[start:end]
+        _n_scenarios_ += (df_rows[cols]>0).sum(axis=0)
     
     # simple histogram
     bins = np.arange(10, 50000, 250)
@@ -42,7 +50,7 @@ def histogram_buildings(input_file, output_dir):
     #print(hist)
     fig = plt.figure(constrained_layout=True)
     ax = fig.add_subplot(1,1,1)
-    ax.hist(n_buildings, bins=bins)
+    ax.hist(_n_scenarios_, bins=bins)
     ax.set_xlabel('Num of buildings')
     ax.set_ylabel('Num of scenarios')
     
