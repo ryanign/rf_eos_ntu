@@ -78,7 +78,7 @@ def resolve_duplicates(combined):
 #---------------------------
 def save_output(merged, name, output_dir):
     print(f'\n=== SAVING ===')
-    os.mkdir(output_dir, exist_ok=True)
+    os.makedirs(output_dir, exist_ok=True)
     output_path = os.path.join(output_dir, f'flood_depth_matrix__{name}.parquet')
     merged.to_parquet(output_path, index=False, compression='snappy')
 
