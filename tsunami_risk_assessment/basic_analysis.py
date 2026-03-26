@@ -25,8 +25,10 @@ import matplotlib.pyplot as plt
 import argparse
 
 
-def histogram_buildings(input_file):
+def histogram_buildings(input_file, output_dir):
     print(f'=== PLOTTING HISTOGRAM OF BUILDINGS AFFECTED ===')
+    os.makedirs(output_dir, exist_ok=True)
+
     df = pd.read_parquet(input_file)
     cols = df.columns[[c for c in df.columns!='FID']]
 
@@ -35,8 +37,22 @@ def histogram_buildings(input_file):
     
     # simple histogram
     bins = np.arange(10, 50000, 250)
-    hist,_ = np.histogram(n_buildings, bins=bins)
+    #hist,_ = np.histogram(n_buildings, bins=bins)
 
+    #print(hist)
+    fig = plt.figure(constrained_layout=True)
+    ax = fig.add_subplot(1,1,1)
+    ax.hist(n_buildings, bins=bins)
+    ax.set_xlabel('Num of buildings')
+    ax.set_ylabel('Num of scenarios')
+    
+    fout = os.path.join(output_dir, f'n_buildings_affected.png')
+    fig.savefig(fout, dpi=300)
+    plt.close()
+
+    print(f'  n_buildings : {n_buidlings:,}')
+    print(f'  histogram saved at {fout}')
+    
     return df
 
 def main(args):
@@ -45,7 +61,7 @@ def main(args):
 
     if file_type == 1:
         if option == '1a':
-            df = histogram_buildings(args.input_file)
+            df = histogram_buildings(args.input_file, args.output_dir)
 
     return df
 
@@ -53,7 +69,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
             '--input_file',
-            default='/home/ryan/SJava_PTRA_analysis/flood_matrix/flood_depth_matrix__Tile_2-10__NLSWE.parquet',
+            default='/home/ignatius.pranantyo/Tsunamis/PTRA_SouthernJava//flood_matrix/flood_depth_matrix__Tile_2-10__NLSWE.parquet',
             help='Path to an input parquet file',
             )
     parser.add_argument(
@@ -69,7 +85,7 @@ if __name__ == '__main__':
             )
     parser.add_argument(
             '--output_dir',
-            default='/home/ryan/SJava_PTRA_analysis/figs_analysis',
+            default='/home/ignatius.pranantyo/Tsunamis/PTRA_SouthernJava/figs_analysis',
             help='Directory to save output files',
             )
     args = parser.parse_args()
