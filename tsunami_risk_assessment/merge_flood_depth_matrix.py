@@ -78,7 +78,7 @@ def resolve_duplicates(combined):
 #---------------------------
 def save_output(merged, name, output_dir):
     print(f'\n=== SAVING ===')
-    os.mkdirs(output_dir, exist_ok=True)
+    os.mkdir(output_dir, exist_ok=True)
     output_path = os.path.join(output_dir, f'flood_depth_matrix__{name}.parquet')
     merged.to_parquet(output_path, index=False, compression='snappy')
 
@@ -122,6 +122,7 @@ if __name__ == '__main__':
     parser.add_argument(
             '--input_files',
             type=str,
+            nargs='+',
             default=[
                 '/home/ryan/SJava_PTRA_analysis/flood_matrix/flood_depth_matrix__Tile_5__NLSWE.parquet',
                 '/home/ryan/SJava_PTRA_analysis/flood_matrix/flood_depth_matrix__tile_6__NLSWE.parquet',
