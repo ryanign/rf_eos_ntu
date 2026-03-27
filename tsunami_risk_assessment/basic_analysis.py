@@ -23,6 +23,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import argparse
+import pyarrow.parquet as pq
 from tqdm import tqdm
 
 def histogram_buildings(input_file, output_dir):
@@ -30,10 +31,9 @@ def histogram_buildings(input_file, output_dir):
     os.makedirs(output_dir, exist_ok=True)
 
     df = pd.read_parquet(input_file)
-    cols = df.columns[[c for c in df.columns!='FID']]
+    cols = [c for c in df.columns if c not in ['FID', 'tile_name']]
 
     # number of buildings affected per-scenario
-    ##n_buildings = (df[cols]>0).sum(axis=0)
     # count in batches
     BATCH_SIZE = 50000
     n_buildings   = len(df)
@@ -41,10 +41,10 @@ def histogram_buildings(input_file, output_dir):
     for start in tqdm(range(0, n_buildings, BATCH_SIZE), desc='  Processing'):
         end = min(start + BATCH_SIZE, n_buildings)
         df_rows = df.iloc[start:end]
-        _n_scenarios_ += (df_rows[cols]>0).sum(axis=0)
+        _n_scenarios_ += (df_rows[cols]>0).sum(axis=0).values
     
     # simple histogram
-    bins = np.arange(10, 50000, 250)
+    bins = np.arange(10, 20000, 250)
     #hist,_ = np.histogram(n_buildings, bins=bins)
 
     #print(hist)
@@ -58,7 +58,7 @@ def histogram_buildings(input_file, output_dir):
     fig.savefig(fout, dpi=300)
     plt.close()
 
-    print(f'  n_buildings : {n_buidlings:,}')
+    print(f'  n_buildings : {n_buildings:,}')
     print(f'  histogram saved at {fout}')
     
     return df
@@ -93,6 +93,7 @@ if __name__ == '__main__':
             )
     parser.add_argument(
             '--output_dir',
+            type=str,
             default='/home/ignatius.pranantyo/Tsunamis/PTRA_SouthernJava/figs_analysis',
             help='Directory to save output files',
             )
