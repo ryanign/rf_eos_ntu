@@ -53,6 +53,9 @@ warnings.filterwarnings("ignore", message="Geometry is in a geographic CRS")
 def load_data(buildings, flood_db):
     print(f'\n=== LOADING DATA ===')
     gdf = gpd.read_file(buildings)
+    if 'osm_id' in gdf.columns:
+        print(f'  Renaming osm_id to FID')
+        gdf.rename(columns={'osm_id':'FID'}, inplace=True)
     nc = xr.open_dataset(flood_db)
     print(f'  Building footprints : {len(gdf):,}')
     print(f'  Scenarios           : {nc.sizes["eventid"]:,}')
