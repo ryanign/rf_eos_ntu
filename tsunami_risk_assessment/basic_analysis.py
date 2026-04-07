@@ -16,6 +16,7 @@ Useage:
         --file_type \\
         --option \\
         --output_dir \\
+        --tile_name
 """
 
 import os
@@ -239,7 +240,7 @@ def histogram_damage_probability(input_file, output_dir, name):
         damage_lev[start:end] = damage_classification_syamsidik2023(rows.values)
     damage_lev_df = df[meta_cols].copy()
     damage_lev_df = pd.concat([
-        damage_lev_df.reset_index(drop=True), pd.DataFrame(damage_lev, columns=col)],
+        damage_lev_df.reset_index(drop=True), pd.DataFrame(damage_lev, columns=cols)],
         axis=1,
         )
 

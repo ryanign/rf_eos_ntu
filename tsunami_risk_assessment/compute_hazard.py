@@ -154,7 +154,8 @@ def load_or_compute_scenario_count(flood_matrix_path, thresholds, output_dir, na
 
     df_fid      = pd.read_parquet(flood_matrix_path, columns = ['FID'])
     all_cols    = pd.read_parquet(flood_matrix_path).columns.tolist()
-    event_cols  = [c for c in all_cols if c != 'FID']
+    meta_cols   = ['FID', 'tile_name']
+    event_cols  = [c for c in all_cols if c not in meta_cols]
     n_scenarios = len(event_cols)
     n_buildings = len(df_fid)
 
@@ -405,4 +406,4 @@ if __name__ == '__main__':
            )
    args = parser.parse_args()
 
-   #lambda_df, var_df, sigma_df, rp_df = main(args)
+   lambda_df, var_df, sigma_df, rp_df = main(args)
