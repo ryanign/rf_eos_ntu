@@ -15,7 +15,9 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import argparse
+import cmcrameri.cm as cm
 from pathlib import Path
+from matplotlib import colors
 
 def fig_extent(nc):
     xmin = nc.lon.min().values
@@ -199,6 +201,49 @@ def displacement_footprint_timeseries(infile, vmin, vmax, t0, t1, scale_ratio, d
 
     return nc
 
+def arrival_time(infile, dem, XX, YY, dt=300):
+    """
+    dt = contour arrival time in seconds
+    """
+    print(f'='*60)
+    print(f' PLOTTING ARRIVAL TIME ')
+    print(f'='*60)
+
+    nc = xr.open_dataset(infile, decode_times=False)['arrival_time']
+    fname = infile.name[:-3]
+    parent_dir = infile.parent
+    fig_dir = os.path.join(parent_dir, 'figures')
+
+    xmin, xmax, ymin, ymax, dlon, dlat = fig_extent(nc)
+    fwidth, fheight = fig_size(dlon, dlat)
+
+    cmap = cm.lajolla_r
+    clrs = np.arange(0, np.nanmax(nc.data) + dt, dt) / 60
+    norm = colors.BoundaryNorm(clrs, cmap.N)
+
+    fig = plt.figure(figsize = (fwidth, fheight), constrained_layout = True)
+    ax = fig.add_subplot(1,1,1, projection=ccrs.PlateCarree())
+    ax.set_title(f"Tsunami arrival time {fname} [minutes]", pad=0.01)
+    ax.coastlines(zorder=100)
+    disp = ax.imshow(nc.data / 60,
+            extent=[xmin, xmax, ymin, ymax], 
+            cmap=cmap,
+            norm=norm,
+            origin="lower")
+    fig.colorbar(disp, orientation="vertical",
+            extend="max", pad=0, shrink=0.8)
+    ax.set_xlim(xmin, xmax)
+    ax.set_ylim(ymin, ymax)
+    ax.set_facecolor("gray")
+
+    if dem is not None and XX is not None and YY is not None:
+        ax.contour(XX, YY, dem[::-1], [0], colors='black', zorder=100, linewidths=2)
+
+    fout = os.path.join(fig_dir, f"arrival_time__{fname}.png")
+    fig.savefig(fout, dpi=300)
+    plt.close()
+
+    return nc
 
 def load_dem(dem_f):
     ds = xr.open_dataset(dem_f)
@@ -221,7 +266,7 @@ if __name__ == "__main__":
             help = "JAGURS nc output file")
     parser.add_argument("--what_to_check", type=int,
             default = 1,
-            help = "1: initial displacement; 2: tsunami max footprint; 3: tsunami footprint timeseries; 4: displacement footprint timeseries")
+            help = "1: initial displacement; 2: tsunami max footprint; 3: tsunami footprint timeseries; 4: displacement footprint timeseries; 5: arrival time")
     parser.add_argument("--vmin_vmax", type=float, nargs="+",
             default = [-1, 1],
             help = "vmin and vmax for colourmap")
@@ -234,6 +279,9 @@ if __name__ == "__main__":
     parser.add_argument("--dem_file", type=str,
             default = None,
             help = "to generate coastline for plotting")
+    parser.add_argument("--contour_arrival_time", type=int,
+            default = 300,
+            help = "contour arrival time, only when what_to_check=5")
     args = parser.parse_args()
 
     if args.dem_file is not None:
@@ -256,6 +304,9 @@ if __name__ == "__main__":
         elif args.what_to_check == 4:
             nc = displacement_footprint_timeseries(infile, args.vmin_vmax[0], args.vmin_vmax[1],
                     args.t0_t1[0], args.t0_t1[1], args.scale_ratio, dem, XX, YY)
+        elif args.what_to_check == 5:
+            dt = args.contour_arrival_time
+            nc = arrival_time(infile, dem, XX, YY, dt)
         else:
             print("WRONG what_to_check CODE!")
             sys.exit()
