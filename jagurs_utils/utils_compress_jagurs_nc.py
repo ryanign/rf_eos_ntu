@@ -9,6 +9,7 @@ a small script to compress jagurs output file:
 import os, sys
 import xarray as xr
 import argparse
+import numpy as np
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--jagurs_nc", type=str, default="SD00.nc",
@@ -31,7 +32,8 @@ for var in var2compress:
 encoding = {'wave_height'          : {'dtype' : dtype, '_FillValue' : 0, 'zlib' : True, 'complevel' : 5},
             'max_height'           : {'dtype' : dtype, '_FillValue' : 0, 'zlib' : True, 'complevel' : 5},
             'initial_displacement' : {'dtype' : dtype, '_FillValue' : 0, 'zlib' : True, 'complevel' : 5},
-            'max_velocity'         : {'dtype' : dtype, '_FillValue' : 0, 'zlib' : True, 'complevel' : 5}}
+            'max_velocity'         : {'dtype' : dtype, '_FillValue' : 0, 'zlib' : True, 'complevel' : 5},
+            }
 
 nc.to_netcdf(f"{args.jagurs_nc[:-3]}_tmp.nc", encoding = encoding, mode = 'w')
 nc.close()
