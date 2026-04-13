@@ -40,7 +40,11 @@ def loading_data(input_data, data_source, freq):
         df.rename(columns={'Time_UTC':'time', 'batV':'bat', 'rad_m':'z_m'}, inplace=True)
     if data_source == 'BIG':
         print(f'  data from BIG')
-        df.rename(columns={'data':'z_m'}, inplace=True)
+        df.rename(columns={'data':'z_m',
+                           'residu': 'residu_m'}, 
+                  inplace=True)
+        df['z_m'] = df['z_m'] / 100.
+        df['residu_m'] = df['residu_m'] / 100.
 
     df['time'] = pd.to_datetime(df['time'])
     df = df.set_index('time')
