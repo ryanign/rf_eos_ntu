@@ -9,6 +9,13 @@ Description:
 Outputs:
 
 Usage:
+    python detide_extract_tsunami_signal.py \
+            --input_data \
+            --data_frequency \
+            --data_source \
+            --output_dir \
+            --freqs_to_cut \
+            --eq_time \
 """
 import os
 import numpy as np
@@ -31,6 +38,9 @@ def loading_data(input_data, data_source, freq):
     if data_source == 'IOC-UNESCO':
         print(f'  data from IOC-UNESCO')
         df.rename(columns={'Time_UTC':'time', 'batV':'bat', 'rad_m':'z_m'}, inplace=True)
+    if data_source == 'BIG':
+        print(f'  data from BIG')
+        df.rename(columns={'data':'z_m'}, inplace=True)
 
     df['time'] = pd.to_datetime(df['time'])
     df = df.set_index('time')
