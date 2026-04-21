@@ -19,9 +19,9 @@ This sub-repo is collection of my scripts to prepare input and post-process outp
 ## Basic steps
 1. Prepare all input files required in one folder. Read the documentation for the details (too many information).
 2. Activate openquake environment.
-3. Inside the working folder, do 'oq engine --run job.ini --log_file run.log'
-4. Once finished, check simulation ID of the simulation inside run.log (at the very last line). This indicate simulation output filename inside '~/oqdata/'
-5. Export results to a bunch of csv files using 'oq engine --export-outputs ID TARGET_FOLDER'
+3. Inside the working folder, do `oq engine --run job.ini --log_file run.log`
+4. Once finished, check simulation ID of the simulation inside run.log (at the very last line). This indicate simulation output filename inside `~/oqdata/`
+5. Export results to a bunch of csv files using `oq engine --export-outputs ID TARGET_FOLDER`
 6. Post-analysis.
 
 ### Typical output files
@@ -36,3 +36,16 @@ hazard_maps = true
 uniform_hazard_spectra = true
 poes = 0.1 0.02
 ```
+
+Hence, I have files below after executed step 5.
+```
+ hazard_curve-mean-PGA_3.csv         'quantile_curve-0.5-SA(1.0)_3.csv'    quantile_map-0.95-2475y_3.csv
+'hazard_curve-mean-SA(1.0)_3.csv'     quantile_curve-0.95-PGA_3.csv        quantile_map-0.95_3.csv
+ hazard_map-mean-2475y_3.csv         'quantile_curve-0.95-SA(1.0)_3.csv'   quantile_map-0.95-475y_3.csv
+ hazard_map-mean_3.csv                quantile_map-0.25-2475y_3.csv        quantile_uhs-0.25_3.csv
+ hazard_map-mean-475y_3.csv           quantile_map-0.25_3.csv              quantile_uhs-0.5_3.csv
+ hazard_uhs-mean_3.csv                quantile_map-0.25-475y_3.csv         quantile_uhs-0.95_3.csv
+ quantile_curve-0.25-PGA_3.csv        quantile_map-0.5-2475y_3.csv         realizations_3.csv
+'quantile_curve-0.25-SA(1.0)_3.csv'   quantile_map-0.5_3.csv               report_3.rst
+ quantile_curve-0.5-PGA_3.csv         quantile_map-0.5-475y_3.csv          site_model_3.csv
+``` 
