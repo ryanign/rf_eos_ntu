@@ -21,5 +21,5 @@ This sub-repo is collection of my scripts to prepare input and post-process outp
 2. Activate openquake environment.
 3. Inside the working folder, do 'oq engine --run job.ini --log_file run.log'
 4. Once finished, check simulation ID of the simulation inside run.log (at the very last line). This indicate simulation output filename inside '~/oqdata/'
-5. Export results to a bunch of csv files using 'oq engine --export-outputs ID'
+5. Export results to a bunch of csv files using 'oq engine --export-outputs ID TARGET_FOLDER'
 6. Post-analysis.
