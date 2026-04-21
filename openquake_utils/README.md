@@ -23,3 +23,16 @@ This sub-repo is collection of my scripts to prepare input and post-process outp
 4. Once finished, check simulation ID of the simulation inside run.log (at the very last line). This indicate simulation output filename inside '~/oqdata/'
 5. Export results to a bunch of csv files using 'oq engine --export-outputs ID TARGET_FOLDER'
 6. Post-analysis.
+
+### Typical output files
+Inside my job.ini file, I set up:
+'''
+intensity_measure_types_and_levels = {
+  "PGA": logscale(0.005, 2.13, 45),
+  "SA(1.0)": logscale(0.005, 2.13, 45)
+  
+quantiles = 0.25 0.50 0.95
+hazard_maps = true
+uniform_hazard_spectra = true
+poes = 0.1 0.02
+'''
