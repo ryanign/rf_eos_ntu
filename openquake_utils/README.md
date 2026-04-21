@@ -26,7 +26,7 @@ This sub-repo is collection of my scripts to prepare input and post-process outp
 
 ### Typical output files
 Inside my job.ini file, I set up:
-'''
+```
 intensity_measure_types_and_levels = {
   "PGA": logscale(0.005, 2.13, 45),
   "SA(1.0)": logscale(0.005, 2.13, 45)
@@ -35,4 +35,4 @@ quantiles = 0.25 0.50 0.95
 hazard_maps = true
 uniform_hazard_spectra = true
 poes = 0.1 0.02
-'''
+```
