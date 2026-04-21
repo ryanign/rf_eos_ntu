@@ -24,6 +24,12 @@ This sub-repo is collection of my scripts to prepare input and post-process outp
 5. Export results to a bunch of csv files using `oq engine --export-outputs ID TARGET_FOLDER`
 6. Post-analysis.
 
+### My notes on parameters inside job.ini
+- Earthquake rupture forecast (erf), smaller `rupture_mesh_spacing` (or `complex_fault_mesh_spacing`) and `width_of_mdf_bin` make it more precise but more expensive.
+- 'maximum_distance' can defined per-area.
+- Probabilities of exceedance ('poes' ).
+- There is option to do disaggregation.
+
 ### Typical output files
 Inside my job.ini file, I set up:
 ```
@@ -48,4 +54,15 @@ Hence, I have files below after executed step 5.
  quantile_curve-0.25-PGA_3.csv        quantile_map-0.5-2475y_3.csv         realizations_3.csv
 'quantile_curve-0.25-SA(1.0)_3.csv'   quantile_map-0.5_3.csv               report_3.rst
  quantile_curve-0.5-PGA_3.csv         quantile_map-0.5-475y_3.csv          site_model_3.csv
-``` 
+```
+
+>[!NOTE]
+> poe-<IML> = probability of exceedance will exceed the given intensity measure level (IML) during the investigation time.
+
+## Scripts
+### Quick plotting
+1. `python plot__hazard_map.py --input_file hazard_map-mean_3.csv --calculation_type 1`
+2. `plot__hazard-curves_map.py --input_file hazard_curve-mean-PGA_3.csv --calculation_type 1`
+3. `plot__hazard-uhs_map.py --input_file hazard_uhs-mean_3.csv --calculation_type 1`
+>[!NOTE]
+> `--calculation_type 1` as 21 April 2026, only for Classical PSHA output files (1). Event based or scenario based simulations have different output format.
