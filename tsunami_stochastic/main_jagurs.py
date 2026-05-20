@@ -51,14 +51,21 @@ def launch(args):
     ### copy symbolic link of the displacement file to where_to_run
     os.chdir(where_to_run)
     disp_file = args.displacement_grdfile
-    cmd = f"ln -s {disp_file} disp__SD00_____.grd"
+    if os.path.exists(disp_file):
+        cmd = f"ln -s {disp_file} disp__SD00_____.grd"
+    else:
+        cmd = f'ln -s {disp_file}.grd disp__SD00_____.grd'
     os.system(cmd)
 
     ### modify jagurs.pbs script
     write_pbs(args)
 
     ### launch job
-    os.system("qsub jagurs.pbs")
+    if args.submit_in_batch:
+        print('will be submitted as a batch job')
+        #continue
+    else:
+        os.system("qsub jagurs.pbs")
 
     ### go back to script directory
     os.chdir(curdir)
@@ -88,6 +95,8 @@ if __name__ == "__main__":
                         help = "nested grids used in gridfile.dat")
     parser.add_argument("--memory", type=int, default = 32,
                         help = "RAM requested to simulate JAGURS")
+    parser.add_argument("--submit_in_batch", type=bool, default=False,
+                        help = "submit JAGURS in batch : True or False")
 
     args = parser.parse_args()
 

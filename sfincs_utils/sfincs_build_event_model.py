@@ -61,6 +61,9 @@ parser.add_argument("--scale_ratio", type = float,
 parser.add_argument("--dtout", type = int,
         default = 600,
         help = "spatial map output interval, in seconds")
+parser.add_argument("--submit_in_batch", type = bool,
+        default = False,
+        help = "To submit SFINCS simulations in batch: True or False -- False = become individual job.")
 # all done #
 
 args = parser.parse_args()
@@ -136,5 +139,8 @@ sf.forcing.keys()
 sf.write()
 
 ### execute
-os.chdir(root_dir)
-os.system("qsub sfincs.slurm")
+if args.submit_in_batch:
+    print("Will be submitted in a batch job. Do manually from the folder.")
+else:
+    os.chdir(root_dir)
+    os.system("qsub sfincs.slurm")
