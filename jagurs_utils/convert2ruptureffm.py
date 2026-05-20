@@ -22,6 +22,17 @@ Idea, with example from one subfault (A):
     
     Slip should be distributed over num_slip_distributed = round(trise / tau + 1)
     Slip increment = total slip / num_slip_distributed
+
+Usage:
+    python convert2ruptureffm.py \\
+	    --input_file \\
+        --jagurs_dt \\
+        --jagurs_tau \\
+        --sf_length \\
+        --sf_width \\ 
+        --sf_strike \\
+        --sf_dip \\
+        --outdir \\
 """
 import os
 import sys
