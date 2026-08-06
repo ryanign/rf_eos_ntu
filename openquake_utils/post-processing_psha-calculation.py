@@ -1,0 +1,192 @@
+"""
+Ryan Pranantyo
+EOS, 6 August 2026
+
+basic post-processing of Classical PSHA CSV output files, converted to a single NetCDF
+
+useage:
+    python post-processing_psha-calculation.py \
+            --input_dir ./outputs/ \
+            --calc_id 6  \
+            --output psha_summary_6.nc
+
+"""
+import os
+import re
+import argparse
+import numpy as np
+import pandas as pd
+import xarray as xr
+from pathlib import Path
+from datetime import datetime
+
+#-------------------------
+# detect structure
+#-------------------------
+def read_oq_csv(path):
+    """ Read OpenQuake CSV - skip comment line if present """
+    with open(path) as f:
+        first = f.readline()
+    skip = 1 if first.startswith('#') else 0
+    return pd.read_csv(path, skiprows=skip)
+
+def get_site_coords(input_dir, calc_id):
+    """ Read site coordinates from site_model_<calc_id>.csv """
+    f = Path(input_dir) / f'site_model_{calc_id}.csv'
+    df = read_oq_csv(f)
+    # Normalise column names
+    df.columns = [c.strip() for c in df.columns]
+    # rename site_id to custom_site_id if needed
+    if 'site_id' in df.columns and 'custom_site_id' not in df.columns:
+        df = df.rename(columns={'site_id': 'custom_site_id'})
+    return df[['custom_site_id', 'lon', 'lat', 'vs30']].sort_values('custom_site_id')
+
+def detect_imts(input_dir, calc_id):
+    """ Detect available IMTs from hazard curve filenames """
+    pattern = re.compile(rf'hazard_curve-mean-(.+)_{calc_id}\.csv')
+    imts = []
+    for f in sorted(os.listdir(input_dir)):
+        m = pattern.match(f)
+        if m:
+            imts.append(m.group(1))
+    return imts
+
+def detect_return_periods(input_dir, calc_id):
+    """ Detect return periods from hazard_map filenames. """
+    pattern = re.compile(rf'hazard_map-mean-(\d+)y_{calc_id}.csv')
+    rps = []
+    for f in sorted(os.listdir(input_dir)):
+        m = pattern.match(f)
+        if m:
+            rps.append(int(m.group(1)))
+    return sorted(rps)
+
+def imt_to_varname(imt):
+    """ convert IMT string to valid variable name """
+    return (imt.replace('(','').replace(')','').replace('.','p'))
+
+#-------------------------
+# building hazard curves
+#-------------------------
+def build_hazard_curves(input_dir, calc_id, site_coords, imts):
+    """
+    Build xarray Dataset for hazard curves
+    Dimensions: site, iml
+    Variables: {IMT}_{stat} where stat = mean, q10, q50, q90
+    """
+    print(f'\n[hazard curves] Building ...')
+
+    quantiles = {'q10' : '0.1', 'q50' : '0.5', 'q90' : '0.9'}
+    stats     = {'mean': 'mean', **quantiles}
+
+    sites = site_coords['custom_site_id'].values
+    data_vars = {}
+
+    # coordinates
+    data_vars['lon']  = xr.DataArray(site_coords['lon'].values, dims='site')
+    data_vars['lat']  = xr.DataArray(site_coords['lat'].values, dims='site')
+    data_vars['vs30'] = xr.DataArray(site_coords['vs30'].values, dims='site')
+
+    for imt in imts:
+        imt_var = imt_to_varname(imt)
+        iml_ref = None
+
+        for stat_name, stat_key in stats.items():
+            if stat_key == 'mean':
+                fname = Path(input_dir) / f'hazard_curve-mean-{imt}_{calc_id}.csv'
+            else:
+                fname = Path(input_dir) / f'quantile_curve-{stat_key}-{imt}_{calc_id}.csv'
+
+            if not fname.exists():
+                print(f'  WARNING: {fname.name} not found, skipping ...')
+                continue
+
+            df = read_oq_csv(fname)
+            if 'custom_site_id' in df.columns:
+                df = df.sort_values('custom_site_id').reset_index(drop=True)
+
+            # Extract IML columns (poe-*)
+            poe_cols = [c for c in df.columns if c.startswith('poe-')]
+            iml_vals = np.array([float(c.replace('poe-','')) for c in poe_cols])
+
+            if iml_ref is None:
+                iml_ref = iml_vals
+                data_vars[f'{imt_var}_iml'] = xr.DataArray(
+                        iml_vals, dims=f'{imt_var}_iml',
+                        attrs={'imt': imt, 'units': 'g'})
+
+            #PoE values: shape (n_sites, n_iml)
+            poe_vals = df[poe_cols].values
+
+            varname = f'{imt_var}_{stat_name}'
+            data_vars[varname] = xr.DataArray(
+                    poe_vals,
+                    dims=['site', f'{imt_var}_iml'],
+                    attrs={'imt': imt, 'statistic':stat_name, 'units': 'probability'})
+
+            print(f'  {imt} {stat_name} : {poe_vals.shape}')
+
+    ds = xr.Dataset(
+            data_vars,
+            coords={'site': sites},
+            attrs={
+                'group' : 'hazard_curves',
+                'description' : 'Hazard curves - PoE vs IML per site',
+                'imts' : ', '.join(imts),
+                'statistics' : ['mean', 'q10', 'q50', 'q90'],
+                'created' : datetime.now().isoformat(),
+                })
+
+    return ds
+
+
+
+
+
+
+
+#-------------------------
+# MAIN
+#-------------------------
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+            description='Build NetCDF from OpenQuake Classical PSHA CSV outputs, based on ver 3.25.1.')
+    parser.add_argument(
+            '--input_dir', 
+            default='/home/ignatius.pranantyo/PSHA/Singapore/Simple_Deterministic/exercise__psha-based__SumatraSubduction__multiGMPEs/outputs',
+            help='Directory containing OQ CSV exported files',
+            )
+    parser.add_argument(
+            '--calc_id',
+            type=int,
+            default=6,
+            help='OpenQuake calculation ID',
+            )
+    args = parser.parse_args()
+
+    input_dir = args.input_dir
+    calc_id   = args.calc_id
+    output_nc = os.path.join(args.input_dir, f'psha_summary_{calc_id}.nc')
+
+    print(f'='*60)
+    print(f'Converting CSV files to NetCDF file ...')
+    print(f'  input folder : {input_dir}')
+    print(f'  calc_id      : {calc_id}'  )
+    print(f'  output file  : {output_nc}')
+    print(f'-'*60)
+
+    # -- detect structure --
+    site_coords    = get_site_coords(input_dir, calc_id)
+    imts           = detect_imts(input_dir, calc_id)
+    return_periods = detect_return_periods(input_dir, calc_id)
+    
+    print(f'\n')
+    print(f'Sites : {len(site_coords)}')
+    print(f'IMTs  : {imts}')
+    print(f'RPs   : {return_periods} yr')
+
+    # -- build groups
+    ds_curves = build_hazard_curves(input_dir, calc_id, site_coords, imts)
+    #ds_maps   = build_hazard_maps(input_dir, calc_id, site_coords, imts, return_periods)
+    #ds_uhs    = build_uhs(input_dir, calc_id, site_coords)
+
