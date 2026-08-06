@@ -8,7 +8,6 @@ useage:
     python post-processing_psha-calculation.py \
             --input_dir ./outputs/ \
             --calc_id 6  \
-            --output psha_summary_6.nc
 
 """
 import os
