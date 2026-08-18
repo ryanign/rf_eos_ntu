@@ -33,6 +33,7 @@ def convert_maximum_footprint(infile, dem_file, gtiff_dir, scale_ratio, crs):
 
     # load initial displacement
     init_disp = nc['initial_displacement'].sum(axis=0) / scale_ratio
+    init_disp_ori = init_disp
 
     # load dem
     dem = xr.open_dataset(dem_file)
@@ -43,7 +44,7 @@ def convert_maximum_footprint(infile, dem_file, gtiff_dir, scale_ratio, crs):
 
     lon_arr = np.linspace(x0, x1, nx)
     lat_arr = np.linspace(y0, y1, ny)
-    zz = dem['z'].values.reshape(ny, nx).astype(np.float64)
+    zz = dem['z'].values.reshape(ny, nx).astype(np.float32)
 
     dem = xr.DataArray(
             data   = zz[::-1],            ### convert water to negative and land to positive
@@ -68,18 +69,31 @@ def convert_maximum_footprint(infile, dem_file, gtiff_dir, scale_ratio, crs):
    
     #flow_depth = only the inundation above land
 
-    nc = flow_depth #max_footprint #, low_depth
+    nc = flow_depth.astype(np.float32) #max_footprint #, low_depth
 
     # assign a projection
     nc = nc.rio.set_spatial_dims(x_dim='lon', y_dim='lat')
     nc.rio.write_crs(crs, inplace=True)
 
     # convert to a GTiff
+    print(f'  Saving max footprint ...')
     fname = infile.name[:-3]
     gtiff_name = os.path.join(gtiff_dir, f'{fname}__max_footprint.tiff')
-    nc.rio.to_raster(gtiff_name)
-
+    nc.rio.to_raster(gtiff_name, driver="GTiff", compress="ZSTD", zstd_level=9,
+            tiled=True, blockxsize=256, blockysize=256)
     print(f'  > check {gtiff_name}')
+
+    # initial displacement
+    print(f'  Saving initial displacement ...')
+    print(np.nanmin(init_disp_ori), np.nanmax(init_disp_ori))
+    nc = init_disp_ori.astype(np.float32)
+    nc = nc.rio.set_spatial_dims(x_dim='lon', y_dim='lat')                                              
+    nc.rio.write_crs(crs, inplace=True)
+    gtiff_name = os.path.join(gtiff_dir, f'{fname}__init_disp.tiff')
+    nc.rio.to_raster(gtiff_name, driver="GTiff", compress="ZSTD", zstd_level=9,
+            tiled=True, blockxsize=256, blockysize=256)
+    print(f'  > check {gtiff_name}')
+
 
     return nc
     #"""
@@ -88,12 +102,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
             '--jagurs_nc', type=str,
-            default = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/Benchmarking__Historical/JAGURS__vs__SFINCS/2006Java__FujiiSatake2006__mod-10GPa__0-5m/SD04.nc',
+            default = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/Benchmarking__Historical/JAGURS__vs__SFINCS/2006Java__FujiiSatake2006__mod-10GPa__0-5m/SD00.nc',
             help = 'JAGURS nc output file',
             )
     parser.add_argument(
             '--dem_file', type=str,
-            default = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/Benchmarking__Historical/JAGURS__vs__SFINCS/2006Java__FujiiSatake2006__mod-10GPa__0-5m/DEM__SD04__NEG.grd',
+            default = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/Benchmarking__Historical/JAGURS__vs__SFINCS/2006Java__FujiiSatake2006__mod-10GPa__0-5m/DEM__SD00__NEG.grd',
             help = 'DEM used',
             )
     parser.add_argument(
@@ -121,7 +135,6 @@ if __name__ == '__main__':
 
         if args.what_to_convert == 1:
             nc = convert_maximum_footprint(infile, args.dem_file, gtiff_dir, args.scale_ratio, args.crs)
-
 
         nc.close()
         
