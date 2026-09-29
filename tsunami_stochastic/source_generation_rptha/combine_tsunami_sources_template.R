@@ -180,3 +180,4 @@ if(write_source_rasters_as_tif){
         writeRaster(stochastic_slip_events[[i]]$source_raster_smooth, file=filename, options=c('COMPRESS=DEFLATE'))
     }
 }
+

@@ -1,0 +1,19 @@
+#!/bin/bash
+#PBS -N dem_interpolation
+#PBS -P eos_luca.dalzilio
+#PBS -q qintel_wfly
+#PBS -l walltime=48:00:00
+#PBS -l select=1:ncpus=8:mem=64g
+
+#module load gnu/gcc-12.3
+#module load hdf5/1.14.3-intel2023-parallel
+
+source /home/ignatius.pranantyo/.bashrc
+~/apps/miniconda3/bin/activate
+#conda activate gmt
+
+cd $PBS_O_WORKDIR
+
+conda activate gmt
+python -W ignore dem_blending.py
+

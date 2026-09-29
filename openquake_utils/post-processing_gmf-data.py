@@ -407,7 +407,7 @@ if __name__ == '__main__':
             )
     parser.add_argument(
             '--input_file',
-            default = './outputs/gmf-data_34.csv',
+            default = '/home/ignatius.pranantyo/PSHA/Singapore/Simple_Deterministic/exercise__scenario-based__fault_trace__SGP_IDN_MY_multiGMPEs/outputs/gmf-data_34.csv',
             help = 'GMF output file from scenario based calculation.'
             )
     args = parser.parse_args()
@@ -542,7 +542,7 @@ if __name__ == '__main__':
     #--------------
     # saving
     #--------------
-    output_nc = f'gmf_statistics__{calc_id}.nc'
+    output_nc = outdir / f'gmf_statistics__{calc_id}.nc'
     print(f'\n{"="*60}')
     print(f'Saving NetCDF: {output_nc}')
 
@@ -557,7 +557,7 @@ if __name__ == '__main__':
         print(f'  Written group: /{group_name}/')
 
     # CSV export
-    output_csv = f'gmf_statistics__{calc_id}.csv'
+    output_csv = outdir / f'gmf_statistics__{calc_id}.csv'
     df_out = datasets['all'].to_dataframe().reset_index()
     df_out.to_csv(output_csv, index=False)
     print(f'  CSV (all): {output_csv}')
@@ -609,15 +609,15 @@ if __name__ == '__main__':
     # saving
 
     # quick plot of imts
-    quick_plot(ds, imts, imt_cols, output_file=f'gmf_quickplot__{calc_id}.png')
+    quick_plot(ds, imts, imt_cols, output_file=outdir / f'gmf_quickplot__{calc_id}.png')
 
     # quick plot of mmi from pga
-    quick_plot_pga_mmi(ds, output_file=f'gmf_quickplot_pga-mmi__{calc_id}.png')
+    quick_plot_pga_mmi(ds, output_file=outdir / f'gmf_quickplot_pga-mmi__{calc_id}.png')
 
     # quick plot of mmi from pgv
-    quick_plot_pgv_mmi(ds, output_file=f'gmf_quickplot_pgv-mmi__{calc_id}.png')
+    quick_plot_pgv_mmi(ds, output_file=outdir / f'gmf_quickplot_pgv-mmi__{calc_id}.png')
     
-    print(f' csv format    = {output_f}')
+    print(f' csv format    = {outdir}/{output_f}')
 
 
 

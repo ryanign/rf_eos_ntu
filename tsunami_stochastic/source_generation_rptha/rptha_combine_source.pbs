@@ -1,0 +1,23 @@
+#PBS -N RPTHA_SouthernJava
+#PBS -P eos_luca.dalzilio
+#PBS -q qamd_wfly
+#PBS -l walltime=48:00:00
+#PBS -l select=1:ncpus=8:mem=256gb
+
+cd $PBS_O_WORKDIR
+
+source /home/ignatius.pranantyo/.bashrc
+~/apps/miniconda3/bin/activate 
+conda activate rptha_py312
+
+R CMD INSTALL rptha_0.1.146.tar.gz
+module load gnu/gcc-12.3
+
+#Rscript produce_unit_sources.R 4
+
+time python -W ignore automate_stochastic_generation.py --Mw_target 8.9 --NumSamples 20 --epicentre_list /home/ignatius.pranantyo/Tsunamis/PTHA_CilegonPorts/SFFM_input_files/target_centroids_PTHA-Cilegon_Ports.csv --unit_source_dirname /home/ignatius.pranantyo/Tsunamis/PTHA_CilegonPorts/SFFM_output_files/Unit_source_data/ --sourcename Slab2_SundaStrait --all_discretized_source_RDS /home/ignatius.pranantyo/Tsunamis/PTHA_CilegonPorts/SFFM_output_files/all_discretized_sources.RDS --where_to_save /home/ignatius.pranantyo/Tsunamis/PTHA_CilegonPorts/SFFM_output_files/SFFM_combinations/ --peak_slip_near_epi TRUE --uniform_slip FALSE --ncpus 8 
+
+#python -W ignore automate_stochastic_generation.py --Mw_bins 7.5 8.8 0.1 --NumSamples 10 --epicentre_list /home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/input_files/SLAB2__Jawa__Centroids.csv --unit_source_dirname /home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/OUTPUTS__Slab2__Jawa/Unit_source_data --sourcename SLAB2__Jawa --all_discretized_source_RDS /home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/OUTPUTS__Slab2__Jawa/all_discretized_sources.RDS --where_to_save /home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/OUTPUTS__Slab2__Jawa/SourceCombinations --ncpus 12
+
+
+#python -W ignore automate_stochastic_generation.py --Mw_bins 7.0 8.7 0.1 --NumSamples 3 --epicentre_list /home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/SelatSunda__centroids__smallbatch.csv --unit_source_dirname /home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/OUTPUTS__SouthernJava__SelatSunda/Unit_source_data --sourcename PUSGEN2017__SelatSundaMegathrust --all_discretized_source_RDS /home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/OUTPUTS__SouthernJava__SelatSunda/all_discretized_sources.RDS --where_to_save /home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/OUTPUTS__SouthernJava__SelatSunda/SourceCombinations --ncpus 4

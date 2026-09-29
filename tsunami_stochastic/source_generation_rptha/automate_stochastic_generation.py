@@ -52,12 +52,12 @@ def write_combine_source_script(args, Mw, target_lon, target_lat, num_of_sffm, s
     fin.write(f"        target_location = target_location,\n")
     fin.write(f"        target_event_mw = desired_Mw,\n")
     fin.write(f"        num_events = number_of_sffm,\n")
-    fin.write(f"        uniform_slip = FALSE,\n")
+    fin.write(f"        uniform_slip = {args.uniform_slip},\n")
     fin.write(f"        expand_length_if_width_limited = 'random',\n")
     fin.write(f"        use_deterministic_LWkc=FALSE,\n")
     fin.write(f"        clip_random_parameters_at_2sd = TRUE,\n")
     fin.write(f"        relation = '{scaling}', \n")
-    fin.write(f"        peak_slip_location_near_centre=FALSE)\n")
+    fin.write(f"        peak_slip_location_near_centre={args.peak_slip_near_epi})\n")
     fin.write(f"stochastic_slip_events_table = sffm_events_to_table(stochastic_slip_events)\n")
     fin.write(f"### Saving output \n")
     fin.write(f"write.csv(unit_source_raster_files, '{raster_grid_list}', row.names=TRUE)\n")
@@ -194,6 +194,10 @@ if __name__ == "__main__":
             help = "path to all_discretized_sources.RDS generated from the the previous step")
     parser.add_argument("--scaling_relationship", type=str, default="Strasser",
             help = "scalling relationship between MW, rupture area, and slip. Read main script for more options")
+    parser.add_argument("--peak_slip_near_epi", type=str, default="FALSE",
+            help = "peak slip near epicentre, FALSE or TRUE")
+    parser.add_argument("--uniform_slip", type=str, default="FALSE",
+            help = "uniform slip, FALSE or TRUE")
     parser.add_argument("--where_to_save", type=str, default = "../OUTPUTS/",
             help = "where to save the stochastic tables")
     parser.add_argument("--ncpus", type=int, default = 2,

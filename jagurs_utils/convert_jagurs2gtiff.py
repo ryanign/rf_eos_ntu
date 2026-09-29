@@ -20,7 +20,7 @@ import rioxarray as rio
 import argparse
 from pathlib import Path
 
-def convert_maximum_footprint(infile, dem_file, gtiff_dir, scale_ratio, crs):
+def convert_maximum_footprint(infile, dem_file, gtiff_dir, scale_ratio, crs, bottom_deformation):
     print(f'='*60)
     print(f' Converting maximum tsunami footprint to a GTiff file')
     print(f'  JAGURS output file = {infile}')
@@ -65,7 +65,13 @@ def convert_maximum_footprint(infile, dem_file, gtiff_dir, scale_ratio, crs):
     max_footprint = max_footprint.where(~land_mask)
     dem_mask = dem.where(~land_mask)
     init_disp = init_disp.where(~land_mask)
-    flow_depth = max_footprint + dem_mask - init_disp
+    
+    #if bottom_deformation:
+    #    flow_depth = max_footprint + dem_mask - init_disp
+    #else:
+    #    flow_depth = max_footprint + dem_mask
+
+    flow_depth = max_footprint + dem_mask
    
     #flow_depth = only the inundation above land
 
@@ -102,18 +108,26 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
             '--jagurs_nc', type=str,
-            default = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/Benchmarking__Historical/JAGURS__vs__SFINCS/2006Java__FujiiSatake2006__mod-10GPa__0-5m/SD00.nc',
+            #default = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/Benchmarking__Historical/JAGURS__vs__SFINCS/2006Java__FujiiSatake2006__mod-10GPa__0-5m/SD00.nc',
+            default = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/Benchmarking__Historical/JAGURS__vs__SFINCS/Tile-5__LargeEvents/DeltaDTM_0-5m__SFFM__Mw_8.900000__Lon_108.909670__Lat_-8.697910__unit_source_slip__5/SD04.nc',
             help = 'JAGURS nc output file',
             )
     parser.add_argument(
             '--dem_file', type=str,
-            default = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/Benchmarking__Historical/JAGURS__vs__SFINCS/2006Java__FujiiSatake2006__mod-10GPa__0-5m/DEM__SD00__NEG.grd',
+            default = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/Benchmarking__Historical/JAGURS__vs__SFINCS/Tile-5__LargeEvents/DeltaDTM_0-5m__SFFM__Mw_8.900000__Lon_108.909670__Lat_-8.697910__unit_source_slip__5/DEM__SD04__NEG.grd',
+            #'/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/Benchmarking__Historical/JAGURS__vs__SFINCS/2006Java__FujiiSatake2006__mod-10GPa__0-5m/DEM__SD00__NEG.grd',
             help = 'DEM used',
             )
     parser.add_argument(
             '--what_to_convert', type=int,
             default = 1,
             help = '1: tsunami maximum footprint',
+            )
+    parser.add_argument(
+            '--consider_bottom_deformation',
+            type=bool,
+            default = False,
+            help = 'True: JAGURS consider bottom deformation, False: otherwise and will not included in the conversion'
             )
     parser.add_argument(
             '--scale_ratio', type=float,
@@ -134,7 +148,12 @@ if __name__ == '__main__':
         gtiff_dir.mkdir(exist_ok = True)
 
         if args.what_to_convert == 1:
-            nc = convert_maximum_footprint(infile, args.dem_file, gtiff_dir, args.scale_ratio, args.crs)
+            nc = convert_maximum_footprint(
+                    infile, 
+                    args.dem_file, gtiff_dir, 
+                    args.scale_ratio, args.crs,
+                    args.consider_bottom_deformation,
+                    )
 
         nc.close()
         

@@ -1,0 +1,15 @@
+#PBS -N DISPLACEMENT
+#PBS -P eos_luca.dalzilio
+#PBS -q qamd_wfly
+#PBS -l walltime=48:00:00
+#PBS -l select=1:ncpus=4:mem=128gb
+
+cd $PBS_O_WORKDIR
+
+source /home/ignatius.pranantyo/.bashrc
+
+~/apps/miniconda3/bin/activate 
+conda activate tsunamis_py39
+
+
+python generate_eq_deformation.py --ncpus 2 --EVENT_CATALOGUE /home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/earthquake_catalogue__region/20250603__cat_6.5-8.7_100k__CATALOGUE-7.dat__EVENT_LIST__Mw6.95+.csv --DISP_PATH /home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/earthquake_displacements/disp__Catalogue--7 --convert2grd True --grd_bbox 102 117.0255 -12.5000 -3.7925 0.0135 --plotting_source True --DISP_COMPILATION_PATH /home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/earthquake_displacements/disp__collections 

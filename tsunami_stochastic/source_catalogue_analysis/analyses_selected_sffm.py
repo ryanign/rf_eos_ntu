@@ -20,6 +20,7 @@ import cartopy.crs as ccrs
 import cmcrameri.cm as cm
 import argparse
 from pathlib import Path
+from matplotlib import colors
 
 ### FUNCTIONS ###
 def fig_extent(nc):
@@ -47,14 +48,16 @@ def fig_size(dlon, dlat, fwidth = 10.):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--catalogue_f", type = str,
-                        default = "/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/earthquake_catalogue__region/20250602__cat_6.5-8.7_100k_5samples.dat__EVENT_LIST__Mw6.95+.csv")
+                        default = "/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/earthquake_catalogue__region/20250526__cat_6.5-8.7_100k__CATALOGUE-1.dat__EVENT_LIST__Mw6.95+.csv")
     parser.add_argument("--Mw", type = float,
-                        default = 7.0)
+                        default = 7.8)
     parser.add_argument("--grid_source", type = str,
                         default = "/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/OUTPUTS__Slab2__Jawa/unit_source_grid/SLAB2__Jawa.shp")
     parser.add_argument("--plot_SFFMs", type = bool,
                         default = False,
                         help = "plotting individual SFFM up to the first 70 models")
+    parser.add_argument("--where2save", type = str,
+                        default = "/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/manuscript__paper/figures_random")
     args = parser.parse_args()
 
 
@@ -62,7 +65,11 @@ if __name__ == "__main__":
 
     catalogue_f = Path(args.catalogue_f)
     cat_fname = catalogue_f.name[:-4]
-    figures_path = Path(os.path.join(catalogue_f.parent, "figures"))
+
+    if args.where2save is not None:
+        figures_path = Path(args.where2save)
+    else:
+        figures_path = Path(os.path.join(catalogue_f.parent, "figures"))
     figures_path.mkdir(exist_ok = True)
     
     ### load the catalogue
@@ -101,7 +108,7 @@ if __name__ == "__main__":
                            columns = colname)
 
     
-    stat2checks = ['mean', 'max']
+    stat2checks = ['mean', 'max', 'number']
 
     for ii, stat in enumerate(stat2checks):
         print(ii, stat)
@@ -109,8 +116,22 @@ if __name__ == "__main__":
 
         if stat == 'mean':
             vals = slip_df.mean(axis=1)
+            cb_label = f'mean slip (m)'
+            cmap = cm.lajolla_r
+            norm = colors.BoundaryNorm(np.linspace(0, vals.max(), int(cmap.N/8)), cmap.N)
+            cb_ticks = np.linspace(0, vals.max(), 5)
         elif stat == 'max':
             vals = slip_df.max(axis=1)
+            cb_label = f'maximum slip (m)'
+            cmap = cm.lajolla_r
+            norm = colors.BoundaryNorm(np.linspace(0, vals.max(), int(cmap.N/8)), cmap.N)
+            cb_ticks = np.linspace(0, vals.max(), 5)
+        elif stat == 'number':
+            vals = (slip_df > 0).sum(axis = 1)
+            cb_label = 'how many times given any slip'
+            cmap = cm.lajolla_r
+            norm = colors.BoundaryNorm(np.arange(-0.5, vals.max()+1.5, 1), cmap.N)
+            cb_ticks = np.arange(0, vals.max()+1, 1)
         else:
             print(f'wrong variable')
             sys.exit()
@@ -127,12 +148,14 @@ if __name__ == "__main__":
                 column = 'values',
                 legend = True,
                 legend_kwds = {
-                    'label' : f'{stat} - slip, m',
+                    'label' : cb_label,
                     'orientation' : 'vertical',
                     'shrink' : 0.8,
-                    'pad' : 0.
+                    'pad' : 0.,
+                    'ticks' : cb_ticks,
                     },
-                cmap = 'inferno_r',
+                cmap = cmap, #'inferno_r',
+                norm = norm,
                 )
 
         grid_gdf.plot(

@@ -1,0 +1,14 @@
+#!/bin/sh
+#PBS -N MESH
+#PBS -P eos_luca.dalzilio
+#PBS -q qamd_wfly
+#PBS -l walltime=48:00:00
+#PBS -l select=1:ncpus=4:mem=32gb
+
+cd $PBS_O_WORKDIR
+
+source /home/ignatius.pranantyo/.bashrc
+~/apps/miniconda3/bin/activate
+conda activate ocsmesh
+
+time python -W ignore fault_mesh.py

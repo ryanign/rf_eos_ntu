@@ -1,0 +1,27 @@
+#PBS -N JOB
+#PBS -P eos_luca.dalzilio
+#PBS -q qamd_wfly
+#PBS -l walltime=48:00:00
+#PBS -l select=1:ncpus=2:mem=32gb
+
+cd $PBS_O_WORKDIR
+
+source /home/ignatius.pranantyo/.bashrc
+
+~/apps/miniconda3/bin/activate 
+conda activate tsunamis_py39
+
+python merge_realistic_sffm.py --Mw 8.3
+python merge_realistic_sffm.py --Mw 8.2
+python merge_realistic_sffm.py --Mw 8.1
+python merge_realistic_sffm.py --Mw 8.0
+python merge_realistic_sffm.py --Mw 7.9
+python merge_realistic_sffm.py --Mw 7.8
+python merge_realistic_sffm.py --Mw 7.7
+python merge_realistic_sffm.py --Mw 7.6
+python merge_realistic_sffm.py --Mw 7.5
+python merge_realistic_sffm.py --Mw 7.4
+python merge_realistic_sffm.py --Mw 7.3
+python merge_realistic_sffm.py --Mw 7.2
+python merge_realistic_sffm.py --Mw 7.1
+python merge_realistic_sffm.py --Mw 7.0

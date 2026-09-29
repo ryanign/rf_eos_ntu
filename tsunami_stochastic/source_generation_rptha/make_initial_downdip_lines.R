@@ -21,10 +21,19 @@
 #source_shapefile = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/input_files/SLAB2_Segmentations/SLAB2__SumatraJawa.shp'
 #out_shapefile = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/input_files/SLAB2_Segmentations/SLAB2__SumatraJawa__downdip.shp'
 
-source_shapefile = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/input_files/SLAB2_Segmentations/SLAB2__Jawa.shp'
-out_shapefile = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/input_files/SLAB2_Segmentations/SLAB2__Jawa__downdip.shp'
+#source_shapefile = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/input_files/SLAB2_Segmentations/SLAB2__Jawa.shp'
+#out_shapefile = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/input_files/SLAB2_Segmentations/SLAB2__Jawa__downdip.shp'
 
-desired_unit_source_length = 20
+#### Cilegon Ports PTHA
+#source_shapefile = '/home/ignatius.pranantyo/Tsunamis/PTHA_CilegonPorts/SFFM_input_files/geometry/Slab2_SundaStrait.shp'
+#out_shapefile = '/home/ignatius.pranantyo/Tsunamis/PTHA_CilegonPorts/SFFM_input_files/geometry/Slab2_SundaStrait__downdip.shp'
+#desired_unit_source_length = 20
+
+
+### 2025 July 30 Kamchatka
+source_shapefile = '/home/ignatius.pranantyo/Tsunamis/20250730__Kamchatka_M8+/sources/stochastics/input_files/slab2__kamchatka.shp'
+out_shapefile = '/home/ignatius.pranantyo/Tsunamis/20250730__Kamchatka_M8+/sources/stochastics/input_files/slab2__kamchatka_downdip.shp'
+desired_unit_source_length = 40
 
 library(rptha)
 

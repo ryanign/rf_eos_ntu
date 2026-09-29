@@ -35,9 +35,15 @@ suppressPackageStartupMessages(library(raster))
 
 ###SLAB2
 ##SOUTHERN JAVA ALL
-all_sourcezone_shapefiles = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/contours/SLAB2__Jawa.shp'
-all_sourcezone_downdip_shapefiles = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/downdips/SLAB2__Jawa__downdip.shp'
-output_base_dir = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/OUTPUTS__Slab2__Jawa__rerun/'
+#all_sourcezone_shapefiles = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/contours/SLAB2__Jawa.shp'
+#all_sourcezone_downdip_shapefiles = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/input_files__SouthernJava/downdips/SLAB2__Jawa__downdip.shp'
+#output_base_dir = '/home/ignatius.pranantyo/Tsunamis/Stochastic__Sumatera_Java/PUSGEN2017__Segmentatations/OUTPUTS__Slab2__Jawa__rerun/'
+
+
+### PTHA Cilegon Ports
+all_sourcezone_shapefiles = '/home/ignatius.pranantyo/Tsunamis/PTHA_CilegonPorts/SFFM_input_files/geometry/Slab2_SundaStrait.shp'
+all_sourcezone_downdip_shapefiles = '/home/ignatius.pranantyo/Tsunamis/PTHA_CilegonPorts/SFFM_input_files/geometry/Slab2_SundaStrait__downdip.shp'
+output_base_dir = '/home/ignatius.pranantyo/Tsunamis/PTHA_CilegonPorts/SFFM_output_files/'
 
 
 
@@ -128,7 +134,7 @@ cell_integration_scale = c(2000, 2000)
 
 # Number of cores for parallel parts. Values > 1 will only work on shared
 # memory linux machines.
-MC_CORES = 16
+MC_CORES = 8
 
 # Option to illustrate 3d interactive plot creation
 #
