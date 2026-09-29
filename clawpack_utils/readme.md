@@ -38,3 +38,15 @@ export CLAW=$HOME/apps/clawpack_src/clawpack
 export FC=gfortran
 EOF
 ```
+
+Test the installation
+
+```
+source ~/apps/clawpack-env/bin/activate
+cd $CLAW/geoclaw/examples/tsunami/chile2010
+python maketopo.py
+make .output
+make plots
+```
+
+Hope, there is no error!
