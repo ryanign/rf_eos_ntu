@@ -31,9 +31,13 @@ def compute_fft(df, data_freq, param):
     data_freq = sampling interval in seconds
     param     = variable to be analysed
     """
+    data_freq = float(data_freq)
+
     print(f'\n  Compute FFT')
     
     print(f'   {param}')
+    print(f'    data freq = {data_freq}')
+
     signal = df[param].values
     n      = len(signal)
     fs     = 1.0 / data_freq
@@ -263,6 +267,7 @@ def main(args):
     print(f' input data      = {input_data}')
     print(f' earthquake time = {eq_time}')
     print(f' time window     = {start} h -- {end} h')
+    print(f' data sampling   = {args.data_sampling} s')
     print(f'='*60)
 
     df = pd.read_csv(input_data)
