@@ -3,7 +3,7 @@ Ryan Pranantyo
 EOS, 17 November 2026
 
 Mission:
-    - load and quick plot decimated DAS data
+    - load and quick plot decimated DAS data (h5 format)
     - data source: https://datacommons.anu.edu.au/DataCommons/rest/records/anudc:6317/data/
 """
 import os
@@ -14,9 +14,21 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import pandas as pd
 import argparse
+from obspy.signal.filter import bandpass, highpass, lowpass
 from glob import glob
 
+#------------------------
+# FUNCTION 
+#------------------------
 def plot_data(data, times, outdir, event, plot_type='original'):
+    """
+    a basic function to plot a single figure of data
+        data   = 2D -- [length, channels]
+        times  = [start time, ..., end time]
+        outdir = path to save the figure
+        event  = for naming purpose
+        plot_type = original or filtered or processed data (any string)
+    """
     print(f'\n Plotting {plot_type} data ...')
     
     data = data - np.median(data, axis=0)
@@ -57,8 +69,37 @@ def plot_data(data, times, outdir, event, plot_type='original'):
     plt.close()
     print(f'  check = {fout}')
 
+def bandpass_filter(
+        data, 
+        fs=50, freqMin=1, freqMax=20, 
+        corners=4, zerophase=True, ftype='butter',
+        skipped_channel_num=1):
+    """
+    a simple function to perform a bandpass filter using obspy
+        data = strain DAS data
+        fs = sampling freq, Hz
+        freqMin = low freq band, Hz
+        freqMax = high freq band, Hz
+        corners = filter corner
+        zerophase = True or False, apply filter once forwards and once backwards
+        ftype = type of filter: butter, cheby1, cheby2, ellip, bessel
+        skipped_channel_num = filter every skipped channels
+    """
+    first_channel = 0
+    last_channel = data.shape[1]
+    cropped_channel_list = np.arange(first_channel, last_channel, skipped_channel_num)
+    data_filtered = np.empty((data.shape[0], cropped_channel_list.shape[0]), dtype='float32')
+    for index, ch in enumerate(cropped_channel_list):
+        data_filtered[:,index] = bandpass(
+                data=data[:,ch],
+                freqmin=freqMin, freqmax=freqMax, df=fs,
+                corners=corners, zerophase=zerophase, ftype=ftype
+                )
+    return data_filtered
 
-
+#------------------------
+# MAIN
+#------------------------
 def main(args):
     input_folder = args.input_folder
     event = args.name
@@ -109,6 +150,17 @@ def main(args):
     plot_data(data, times, outdir, event, 'original')
 
     # a simple bandpass filter
+    if args.bandpass_filter:
+        print(f' Performing bandpass filter [{args.freq_bandwith[0]} Hz -- {args.freq_bandwith[1]} Hz] ...')
+        data_filtered = bandpass_filter(
+                data,
+                fs=fs, freqMin=args.freq_bandwith[0], freqMax=args.freq_bandwith[1],
+                corners=4, zerophase=True, ftype='butter',
+                skipped_channel_num=1,
+                )
+        print(f'  plotting filtered data')
+        plot_data(data_filtered, times, outdir, 
+                event, f'filtered_{args.freq_bandwith[0]}-{args.freq_bandwith[1]}')
 
 
 
@@ -159,22 +211,21 @@ if __name__ == '__main__':
             default = '/home/ignatius.pranantyo/DAS/00_exercise/figures',
             help = 'output folder to save any processed file',
             )
+    parser.add_argument(
+            '--bandpass_filter',
+            default = True,
+            type = bool,
+            help = 'perform a bandpass filter?'
+            )
+    parser.add_argument(
+            '--freq_bandwith',
+            default = [20, 25],
+            nargs = '+',
+            help = 'frequency boundaries: low freq and high freq, max high freq is nyquist freq',
+            )
     args = parser.parse_args()
 
     files, data, event, outdir, times = main(args)
 
-    ### sandpit, a simple bandpass filter using obspy
-    print(f'  trying to do a simple bandpass filter')
-    from obspy.signal.filter import bandpass, highpass, lowpass
-    freqMin = 1
-    freqMax = 20
-    skipped_channel_num = 1
-    first_channel = 0
-    last_channel = data.shape[1]
-    cropped_channel_list = np.arange(first_channel, last_channel, skipped_channel_num)
-    data_filtered = np.empty((data.shape[0], cropped_channel_list.shape[0]), dtype='float32')
-    for index, ch in enumerate(cropped_channel_list):
-        data_filtered[:,index] = bandpass(data[:,ch], freqMin, freqMax, args.sampling_frequency, corners=4, zerophase=True)
-
-    plot_data(data_filtered, times, outdir, 'filtered')
+    sys.exit()
 
